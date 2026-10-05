@@ -18,8 +18,6 @@ pub use self::state::DataDirs;
 /// 看配置文件 mtime 的最短间隔；工人循环空闲时按它等，重排的短节拍来得更勤时按这个节流。
 pub(super) const CONFIG_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
-/// 检查更新的结果文件名，在用户数据目录下（见 `qingjian-update::UpdateState`）。
-const UPDATE_STATE_FILE: &str = "update.json";
 use super::{Router, RouterConfig};
 use crate::assembly;
 
@@ -63,16 +61,6 @@ fn swap_translator(
 }
 
 impl Router {
-    /// 检查更新查到了要提示的新版本（开关关着、本地开发包都不算）。
-    pub(super) fn update_available(&self) -> bool {
-        self.reload.as_ref().is_some_and(|reload| {
-            reload
-                .updates
-                .as_ref()
-                .is_some_and(|updates| updates.available(&reload.update).is_some())
-        })
-    }
-
     /// `config.toml` 路径；没开热加载（测试）时为 `None`。
     pub(super) fn config_path(&self) -> Option<&Path> {
         self.reload
@@ -80,9 +68,7 @@ impl Router {
             .map(|reload| reload.config_path.as_path())
     }
 
-    /// 开启热加载：记下路径与当前已应用的 predict / dictionaries / aux_code / 学习语言，
-    /// 以及启动用的那批数据目录。目录必须与启动同款语义（`dicts/` / `codes/`），
-    /// 热加载才找得到文件。
+    /// 开启热加载：记下词库、辅码与学习语言配置，以及启动时的数据目录。
     pub fn watch_config(
         &mut self,
         config: &Config,
@@ -93,9 +79,6 @@ impl Router {
         let last_mtime = mtime(&config_path);
         let code_files = dirs.code_snapshot();
         let dictionary_files = dirs.dict_snapshot();
-        let updates = dirs.user_root.as_deref().map(|dir| {
-            qingjian_update::Checker::new(dir.join(UPDATE_STATE_FILE), env!("CARGO_PKG_VERSION"))
-        });
         self.reload = Some(ConfigReload {
             config_path,
             last_check: Instant::now(),
@@ -107,8 +90,6 @@ impl Router {
             applied_aux_code: config.aux_code.clone(),
             dictionary_files,
             applied_language: assembly::learning_language(config),
-            update: config.update.clone(),
-            updates,
         });
     }
 
@@ -122,9 +103,6 @@ impl Router {
             return;
         }
         reload.last_check = Instant::now();
-        if let Some(updates) = &reload.updates {
-            updates.poll(&reload.update);
-        }
         // 用户 `dicts/` 目录文件增删或更新：与配置改动无关，下一拍就生效
         let files = reload.dirs.dict_snapshot();
         if files != reload.dictionary_files {
@@ -193,7 +171,6 @@ impl Router {
         let Some(reload) = &mut self.reload else {
             return;
         };
-        reload.update = config.update.clone();
         let language = assembly::learning_language(config);
         if language != reload.applied_language
             && swap_translator(

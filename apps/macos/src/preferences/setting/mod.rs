@@ -53,18 +53,6 @@ pub enum Setting {
     /// `[model] enabled`。
     LocalModelEnabled,
 
-    /// `[update] check`。
-    UpdateCheck,
-
-    /// `[update] channel`，弹出菜单 正式版 / 测试版。
-    UpdateChannel,
-
-    /// 立即检查更新。
-    CheckUpdateNow,
-
-    /// 打开下载页。
-    OpenDownload,
-
     /// 默认中文标点模式。
     FullWidthPunctuation,
 
@@ -217,10 +205,6 @@ impl Setting {
             Self::OpenWebsite => 30,
             Self::OpenRepository => 31,
             Self::LocalModelEnabled => 32,
-            Self::UpdateCheck => 53,
-            Self::UpdateChannel => 54,
-            Self::CheckUpdateNow => 55,
-            Self::OpenDownload => 56,
             Self::FullWidthPunctuation => 33,
             Self::SelectPhrase => 34,
             Self::PhraseDraft => 35,
@@ -278,10 +262,6 @@ impl Setting {
             30 => Self::OpenWebsite,
             31 => Self::OpenRepository,
             32 => Self::LocalModelEnabled,
-            53 => Self::UpdateCheck,
-            54 => Self::UpdateChannel,
-            55 => Self::CheckUpdateNow,
-            56 => Self::OpenDownload,
             33 => Self::FullWidthPunctuation,
             34 => Self::SelectPhrase,
             35 => Self::PhraseDraft,
@@ -323,10 +303,6 @@ mod tests {
             Setting::ExpressionKey,
             Setting::QuestionKey,
             Setting::LocalModelEnabled,
-            Setting::UpdateCheck,
-            Setting::UpdateChannel,
-            Setting::CheckUpdateNow,
-            Setting::OpenDownload,
             Setting::OpenConfigFile,
             Setting::Layout,
             Setting::Preedit,

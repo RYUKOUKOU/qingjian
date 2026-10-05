@@ -16,8 +16,6 @@ pub enum MenuAction {
     /// 在访达里打开日志目录。
     OpenLogs,
 
-    /// 打开下载页（菜单里「有新版本」那一行）。
-    OpenDownload,
 }
 
 impl MenuAction {
@@ -25,7 +23,6 @@ impl MenuAction {
         match self {
             Self::OpenPreferences => 2,
             Self::OpenLogs => 3,
-            Self::OpenDownload => 4,
             Self::ToggleFuzzy(index) => FUZZY_TAG_BASE + index as NSInteger,
         }
     }
@@ -34,7 +31,6 @@ impl MenuAction {
         Some(match tag {
             2 => Self::OpenPreferences,
             3 => Self::OpenLogs,
-            4 => Self::OpenDownload,
             _ => {
                 let index = usize::try_from(tag.checked_sub(FUZZY_TAG_BASE)?).ok()?;
                 (index < FuzzyRules::NAMES.len()).then_some(Self::ToggleFuzzy(index))?
@@ -52,7 +48,6 @@ mod tests {
         let all = [
             MenuAction::OpenPreferences,
             MenuAction::OpenLogs,
-            MenuAction::OpenDownload,
             MenuAction::ToggleFuzzy(0),
             MenuAction::ToggleFuzzy(FuzzyRules::NAMES.len() - 1),
         ];
