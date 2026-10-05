@@ -36,7 +36,6 @@ pub struct ShortcutsPage {
 
     /// 删除候选的修饰键。
     delete_candidate: Retained<KeyRecorder>,
-
 }
 
 impl ShortcutsPage {

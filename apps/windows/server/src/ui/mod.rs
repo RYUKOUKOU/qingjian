@@ -106,7 +106,6 @@ impl StatusSink for UiHandle {
     fn open_settings(&self) {
         open_settings();
     }
-
 }
 
 /// 起与本 exe 同目录的设置程序。设置程序已开时由新实例把它带到前台，得先把前台权让出去。

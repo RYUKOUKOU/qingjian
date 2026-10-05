@@ -15,7 +15,6 @@ pub enum MenuAction {
 
     /// 在访达里打开日志目录。
     OpenLogs,
-
 }
 
 impl MenuAction {

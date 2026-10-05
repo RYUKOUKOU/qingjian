@@ -5,9 +5,7 @@ use std::time::{Instant, SystemTime};
 
 use qingjian_core::Language;
 use qingjian_dictionary::Dictionary;
-use qingjian_platform::{
-    AuxCodeConfig, DictionariesConfig, code_tables, extra_dictionaries,
-};
+use qingjian_platform::{AuxCodeConfig, DictionariesConfig, code_tables, extra_dictionaries};
 
 /// 随包与用户数据目录：启动与热加载用的是同一批（词库、码表）。
 /// 分开传参数会越传越长，且热加载与原路径不一致时找不到文件。
@@ -79,7 +77,6 @@ pub(crate) struct ConfigReload {
 
     /// 最近加载的用户词库文件快照（路径、修改时间、长度）。
     pub(super) dictionary_files: Vec<(PathBuf, Option<SystemTime>, u64)>,
-
 }
 
 impl ConfigReload {

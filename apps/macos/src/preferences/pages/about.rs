@@ -6,15 +6,14 @@ use objc2::MainThreadMarker;
 use objc2_app_kit::{NSFont, NSTextField};
 use objc2_foundation::NSString;
 
-use crate::preferences::controls::{
-    GROUP_GAP, button, note_full, small_label,
-};
+use crate::preferences::controls::{GROUP_GAP, button, note_full, small_label};
 use crate::preferences::layout::{Layout, PAGE_PADDING, ROW_HEIGHT};
 use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
 /// 许可说明，与仓库根目录 `LICENSE` 一致。
-pub const LICENSE_NOTE: &str = "自由软件，GPL-3.0-or-later 许可证：可以自由使用、修改与再分发，修改后分发须同样开源。";
+pub const LICENSE_NOTE: &str =
+    "自由软件，GPL-3.0-or-later 许可证：可以自由使用、修改与再分发，修改后分发须同样开源。";
 
 /// 随包数据的来源与许可证。改数据来源时同步改这里和 `apps/macos/scripts/bundle.sh` 里 `pack` 的署名。
 pub const ATTRIBUTIONS: &[(&str, &str)] = &[

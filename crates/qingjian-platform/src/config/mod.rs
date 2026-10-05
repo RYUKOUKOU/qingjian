@@ -82,7 +82,6 @@ pub struct Config {
 
     /// 本地整句模型。
     pub model: LocalModelConfig,
-
 }
 
 fn deserialize_phrases<'de, D: serde::Deserializer<'de>>(

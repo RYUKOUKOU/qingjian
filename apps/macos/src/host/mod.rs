@@ -21,27 +21,17 @@ use std::path::PathBuf;
 use objc2::MainThreadMarker;
 use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
 use objc2_foundation::{NSProcessInfo, NSRect, NSString};
-use qingjian_core::{
-    Candidate, CandidateKind, Cell, CloudWord, EmojiTable, Engine, FuzzyRules, Language, ModeKeys,
-    NoInputLogger, NoTranslator, Prediction,
-};
-use qingjian_dictionary::{Dictionary, WordList};
-use qingjian_learning::{FrequencyLearner, InputLog, UsageStats, VocabularyBook};
-use qingjian_lm::BigramModel;
+use qingjian_core::{Candidate, CandidateKind, Cell, Engine, Language, NoInputLogger};
+use qingjian_learning::InputLog;
 use qingjian_platform::extra_dictionaries;
 use qingjian_platform::{
-    AppsConfig, CandidateRenderer, DEFAULT_ENGLISH_CANDIDATES_OFF, DictionariesConfig,
-    GeneralConfig, KeyCombo, LEARNING_LANGUAGE_OFF, LayoutMode, LocalModelConfig, LogLevel,
-    Modifiers, PAGE_KEY_OPTIONS, PreeditMode, Scheme, ShortcutConfig, ThemeMode,
+    AppsConfig, DictionariesConfig, KeyCombo, LayoutMode, LocalModelConfig, Modifiers, PreeditMode,
 };
-use qingjian_translate::{Glossary, LayeredTranslator, LevelTable, PersonalGlossary};
 
-use crate::app::BundleInfo;
 use crate::app::{Settings, logging, paths};
 use crate::candidates::{CandidateWindow, Frame, Preedit, Row};
-use crate::error::HostError;
-use crate::menubar::{InputMenu, MenuAction, ModeIndicator};
-use crate::preferences::{PreferencesWindow, Setting, SettingValue};
+use crate::menubar::{InputMenu, ModeIndicator};
+use crate::preferences::PreferencesWindow;
 
 use cloud::PredictMonitor;
 use config::{ConfigWatch, TextReplacement};
@@ -92,7 +82,7 @@ pub struct Host {
     /// 版本号与构建标识，诊断信息里用。
     version: String,
 
-    /// 见 [`BundleInfo::build`]。
+    /// 见 [`crate::app::BundleInfo::build`]。
     build: String,
 
     /// 每页候选数（配置 `[general] page_size`，已夹到 1–9）。

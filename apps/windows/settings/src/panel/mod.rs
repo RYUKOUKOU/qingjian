@@ -17,7 +17,7 @@ use windows_reactor::*;
 pub(crate) use self::message::Message;
 use self::notice::Notice;
 use self::pages::{
-    about, advanced, aux_code, candidates, model, dictionaries, fuzzy, general, shortcut, usage,
+    about, advanced, aux_code, candidates, dictionaries, fuzzy, general, model, shortcut, usage,
 };
 use self::recorder::Recorder;
 

@@ -107,7 +107,6 @@ pub enum Setting {
     /// `[shortcut] translation_second`，同上。
     TranslationSecondKeys,
 
-
     /// 「恢复默认快捷键」按钮：翻页键、模式键、三组译词 / 翻译快捷键全部回缺省。
     ResetShortcuts,
 
@@ -158,7 +157,6 @@ pub enum Setting {
 
     /// 「高级」页「清空输入日志」按钮。
     ClearInputLog,
-
 }
 
 impl Setting {

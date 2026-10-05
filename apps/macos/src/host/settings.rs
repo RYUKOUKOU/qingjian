@@ -1,8 +1,17 @@
 //! 菜单与偏好设置窗口的动作：只改 config.toml（或触发一次性操作），改完由 apply_config 统一生效。
 
 use super::diagnostics::{copy_to_pasteboard, open_with_system};
-use super::*;
+use qingjian_core::{FuzzyRules, ModeKeys};
+use qingjian_platform::{
+    CandidateRenderer, DEFAULT_ENGLISH_CANDIDATES_OFF, LEARNING_LANGUAGE_OFF, LayoutMode, LogLevel,
+    Modifiers, PAGE_KEY_OPTIONS, PreeditMode, Scheme, ShortcutConfig, ThemeMode,
+};
+
+use super::Host;
+use crate::app::logging;
+use crate::menubar::MenuAction;
 use crate::preferences::DEFAULT_FONT_LABEL;
+use crate::preferences::{Setting, SettingValue};
 use qingjian_platform::ShiftLetter;
 
 impl Host {

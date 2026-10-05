@@ -1,6 +1,30 @@
 //! 启动：加载词库 / 语言模型 / 释义表 / 学习数据，建 Engine 与候选窗口，装进线程局部的 HOST。
 
-use super::*;
+use std::path::PathBuf;
+
+use objc2::MainThreadMarker;
+use objc2_foundation::NSRect;
+use qingjian_core::{EmojiTable, Engine, Language};
+use qingjian_dictionary::{Dictionary, WordList};
+use qingjian_learning::{FrequencyLearner, UsageStats, VocabularyBook};
+use qingjian_lm::BigramModel;
+use qingjian_platform::{
+    AppsConfig, DictionariesConfig, KeyCombo, LayoutMode, PreeditMode, ShortcutConfig,
+    extra_dictionaries,
+};
+use qingjian_translate::{Glossary, LayeredTranslator, LevelTable, PersonalGlossary};
+
+use super::cloud::PredictMonitor;
+use super::config::ConfigWatch;
+use super::dictionaries::DictionaryInfo;
+use super::model::RescoreMonitor;
+use super::session::Session;
+use super::{GLOSSARY_LANGUAGES, HOST, Host, USAGE_FILE, VOCABULARY_FILE, with};
+use crate::app::{BundleInfo, Settings, paths};
+use crate::candidates::CandidateWindow;
+use crate::error::HostError;
+use crate::menubar::{InputMenu, ModeIndicator};
+use crate::preferences::PreferencesWindow;
 
 /// 加载数据并建立单例。必须在主线程、在 IMKServer 建立之前调用。版本显示在菜单末行与「关于」页。
 pub fn init(mtm: MainThreadMarker, info: &BundleInfo) -> Result<(), HostError> {

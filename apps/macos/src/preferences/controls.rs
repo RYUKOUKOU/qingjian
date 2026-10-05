@@ -213,8 +213,6 @@ pub(super) fn text_field(
     field
 }
 
-
-
 fn editable(field: &NSTextField, setting: Setting, target: &PreferencesTarget) {
     field.setBezeled(true);
     field.setEditable(true);

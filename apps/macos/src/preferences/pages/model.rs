@@ -19,7 +19,11 @@ impl ModelPage {
     pub fn build(layout: &mut Layout, mtm: MainThreadMarker, target: &PreferencesTarget) -> Self {
         let local_model = checkbox(mtm, "本地整句模型", Setting::LocalModelEnabled, target);
         row_checkbox(layout, &local_model);
-        note(layout, mtm, "随包的小模型在本机给整句候选重新排序，全程离线；停键后几十毫秒生效。关掉只用词库统计。");
+        note(
+            layout,
+            mtm,
+            "随包的小模型在本机给整句候选重新排序，全程离线；停键后几十毫秒生效。关掉只用词库统计。",
+        );
         Self { local_model }
     }
 

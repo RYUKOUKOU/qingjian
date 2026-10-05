@@ -90,5 +90,4 @@ pub(crate) enum Message {
     /// 日志目录 + config.toml 打成 zip 放桌面。
     ExportLogs,
     ClearInputLog,
-
 }

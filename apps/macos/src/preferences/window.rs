@@ -12,8 +12,8 @@ use qingjian_platform::Config;
 use super::controls::{language_label, small_label};
 use super::layout::{Layout, PAGE_PADDING, PAGE_WIDTH};
 use super::pages::{
-    AdvancedPage, CandidatesPage, ModelPage, DictionariesPage, FuzzyPage, GeneralPage,
-    PhrasesPage, ShortcutsPage, UsagePage, build_about,
+    AdvancedPage, CandidatesPage, DictionariesPage, FuzzyPage, GeneralPage, ModelPage, PhrasesPage,
+    ShortcutsPage, UsagePage, build_about,
 };
 use super::panel::PreferencesPanel;
 use super::target::PreferencesTarget;
@@ -225,12 +225,7 @@ impl PreferencesWindow {
     }
 
     /// 按配置刷新所有本地控件。
-    pub fn sync(
-        &self,
-        config: &Config,
-        error: Option<&str>,
-        dictionaries: &[DictionaryInfo],
-    ) {
+    pub fn sync(&self, config: &Config, error: Option<&str>, dictionaries: &[DictionaryInfo]) {
         self.dictionaries.rebuild(dictionaries);
         self.general.sync(config);
         self.candidates.sync(config);

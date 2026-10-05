@@ -7,7 +7,11 @@ pub(super) use text_replacements::TextReplacement;
 pub(super) use watch::ConfigWatch;
 
 use super::init::load_glossary;
-use super::*;
+use qingjian_core::{Language, NoTranslator};
+use qingjian_platform::{GeneralConfig, Scheme};
+
+use super::{Host, LEARNING_FLUSH_INTERVAL};
+use crate::app::{logging, paths};
 
 impl Host {
     /// 把当前配置推给 Engine 与界面：模糊音 / 模式键 / 翻页 / 外观直接设；学习语言变了换释义表；
@@ -69,11 +73,8 @@ impl Host {
         self.indicator.update();
         self.menu.sync(&config, self.settings.error());
         self.dictionary_list = self.dictionary_infos();
-        self.preferences.sync(
-            &config,
-            self.settings.error(),
-            &self.dictionary_list,
-        );
+        self.preferences
+            .sync(&config, self.settings.error(), &self.dictionary_list);
     }
 
     /// 配置里的自定义短语，`[general] system_text_replacements` 开着时再并上系统的文本替换，一起推给 Engine。

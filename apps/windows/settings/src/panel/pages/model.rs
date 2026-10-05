@@ -13,5 +13,8 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             .is_on(settings.config.model.enabled)
             .on_toggled(context.callback(Message::LocalModel)),
     );
-    page("本地模型", StackPanel::new().spacing(16.0).children([local_model]))
+    page(
+        "本地模型",
+        StackPanel::new().spacing(16.0).children([local_model]),
+    )
 }

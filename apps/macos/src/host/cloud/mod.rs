@@ -4,7 +4,9 @@ mod predict_monitor;
 
 pub(super) use predict_monitor::PredictMonitor;
 
-use super::*;
+use qingjian_core::{Candidate, CandidateKind, CloudWord, Prediction};
+
+use super::Host;
 
 impl Host {
     /// 已发出联想请求：清掉旧结果，开始轮询。
