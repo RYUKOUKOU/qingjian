@@ -5,7 +5,7 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, offline]
   pull_request:
 
 permissions:
@@ -37,6 +37,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++ libfcitx5core-dev libfcitx5config-dev libfcitx5utils-dev nlohmann-json3-dev
+
+      - name: Offline dependency and source checks
+        run: python3 tools/check-offline.py --target x86_64-unknown-linux-gnu
 
       - name: Format
         run: cargo fmt --all --check
@@ -70,6 +73,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
+      - name: Offline dependency and source checks
+        run: python3 tools/check-offline.py --target aarch64-apple-darwin --target x86_64-apple-darwin
+
       - name: Clippy (IMK shell)
         run: cargo clippy -p qingjian-macos --all-targets --locked -- -D warnings
 
@@ -93,6 +99,9 @@ jobs:
           targets: i686-pc-windows-msvc
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Offline dependency and source checks
+        run: python tools/check-offline.py --target x86_64-pc-windows-msvc --target i686-pc-windows-msvc
 
       - name: Clippy (Server, TSF DLL, Settings)
         run: cargo clippy -p qingjian-windows-server -p qingjian-windows-tsf -p qingjian-windows-settings --all-targets --locked -- -D warnings
