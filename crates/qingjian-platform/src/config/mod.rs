@@ -20,7 +20,6 @@ mod update;
 use std::path::Path;
 
 use qingjian_core::FuzzyRules;
-use qingjian_predict::PredictConfig;
 use serde::{Deserialize, Serialize};
 use toml_edit::DocumentMut;
 
@@ -77,9 +76,6 @@ pub struct Config {
 
     /// 按应用改行为（哪些应用里英文模式不给候选）。
     pub apps: AppsConfig,
-
-    /// 云联想。
-    pub predict: PredictConfig,
 
     /// 悬浮状态条（桌面上常驻、可拖动的中 / 英浮窗）。
     pub status_bar: StatusBarConfig,
@@ -312,29 +308,6 @@ disabled = []
 # 本地整句模型：随包的小模型在本机给整句候选重新排序，全程离线；停顿后几十毫秒生效。关掉只用词库统计
 enabled = true
 
-[predict]
-# 云联想：把光标附近的文本发到下面的接口，让模型补全整句 / 联想下文。默认关闭。
-# 开启后菜单栏的「中 / 英」旁会带一个云朵标识；Secure Input（密码框）里绝不发送。
-enabled = false
-# OpenAI 兼容接口地址与模型名（DeepSeek 默认值）
-base_url = "https://api.deepseek.com"
-model = "deepseek-v4-flash"
-# 推理强度（reasoning_effort）：none 关掉模型的思考，联想要快；留空则不发这个参数
-reasoning_effort = "none"
-# 密钥：填在这里，或留空并设置 api_key_env 指定的环境变量（偏好设置里填的密钥写进配置同目录的 .env）
-# api_key = ""
-api_key_env = "QINGJIAN_API_KEY"
-# 单次请求超时（毫秒）、停止敲键多久后才发请求（毫秒）
-timeout_ms = 5000
-debounce_ms = 300
-# 光标前 / 后最多发多少个字符——这是发往云端的上下文上限
-lookback = 64
-lookahead = 32
-# 云端词到了补进候选窗口第一页末尾几格（比如 2 就是 8、9 两格），前面的本地候选不动；0 表示不要云端词
-slots = 2
-# 组句中除了词候选还要不要整句补全（preedit 右侧，Tab 接受）
-sentence = true
-
 [status_bar]
 # 桌面上常驻、可拖动的悬浮状态条（Windows）：「中 / 英」格点一下切换模式（开着双拼时还显示方案名）、「，。」格切全角 / 半角标点、齿轮打开设置。
 # 只在当前输入法是青简时显示；与任务栏的中 / 英指示器并存
@@ -444,10 +417,6 @@ impl Config {
             path: path.to_owned(),
             source: Box::new(source),
         })?;
-        // 配置或环境变量里的密钥登记给日志掩码；各进程都从这里加载配置，登记在这一处就够
-        if let Some(key) = config.predict.resolve_api_key() {
-            crate::logs::secrets::register(&key);
-        }
         Ok(config)
     }
 
@@ -557,12 +526,9 @@ mod tests {
 
     #[test]
     fn partial_file_keeps_other_defaults() {
-        let config: Config = toml::from_str("[predict]\nenabled = true\nlookback = 10\n").unwrap();
-        assert!(config.predict.enabled);
-        assert_eq!(config.predict.lookback, 10);
-        assert_eq!(config.predict.model, "deepseek-v4-flash");
-        assert_eq!(config.predict.reasoning_effort, "none");
-        assert_eq!(config.predict.api_key_env, "QINGJIAN_API_KEY");
+        let config: Config = toml::from_str("[model]\nenabled = false\n").unwrap();
+        assert!(!config.model.enabled);
+        assert_eq!(config.general, GeneralConfig::default());
     }
 
     #[test]
@@ -622,14 +588,14 @@ mod tests {
         )
         .unwrap();
         Config::set_bool(&path, "fuzzy", "z_zh", true).unwrap();
-        Config::set_bool(&path, "predict", "enabled", true).unwrap();
+        Config::set_bool(&path, "model", "enabled", true).unwrap();
         let text = std::fs::read_to_string(&path).unwrap();
         assert!(
             text.starts_with("# 头注释\n[fuzzy]\n# 说明\nz_zh = true\nn_l = true\n"),
             "{text}"
         );
         let config = Config::load(&path).unwrap();
-        assert!(config.fuzzy.z_zh && config.fuzzy.n_l && config.predict.enabled);
+        assert!(config.fuzzy.z_zh && config.fuzzy.n_l && config.model.enabled);
         let _ = std::fs::remove_file(&path);
     }
 
@@ -643,8 +609,8 @@ mod tests {
         assert_eq!(std::fs::read_to_string(&path).unwrap(), TEMPLATE);
         // 没有模板直接保存也行
         std::fs::remove_dir_all(&dir).unwrap();
-        Config::set_bool(&path, "predict", "enabled", true).unwrap();
-        assert!(Config::load(&path).unwrap().predict.enabled);
+        Config::set_bool(&path, "model", "enabled", true).unwrap();
+        assert!(Config::load(&path).unwrap().model.enabled);
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -652,10 +618,10 @@ mod tests {
     fn set_bool_starts_from_template_when_missing() {
         let path = std::env::temp_dir().join("qingjian-config-set-bool-missing-test.toml");
         let _ = std::fs::remove_file(&path);
-        Config::set_bool(&path, "predict", "enabled", true).unwrap();
+        Config::set_bool(&path, "model", "enabled", true).unwrap();
         let text = std::fs::read_to_string(&path).unwrap();
         assert!(text.contains("# 青简输入法配置"));
-        assert!(Config::load(&path).unwrap().predict.enabled);
+        assert!(Config::load(&path).unwrap().model.enabled);
         let _ = std::fs::remove_file(&path);
     }
 

@@ -39,15 +39,6 @@ pub(crate) enum Message {
 
     // 云服务页
     LocalModel(bool),
-    CloudEnabled(bool),
-    CloudApiKey(String),
-    CloudModel(String),
-    CloudBaseUrl(String),
-    CloudSlots(Option<f64>),
-    CloudSentence(bool),
-    TestConnection,
-    CloudTestDone(Result<String, String>),
-
     // 快捷键页
     PageKeys(Option<usize>),
     ModeExpression(Option<usize>),

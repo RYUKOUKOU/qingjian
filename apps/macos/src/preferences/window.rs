@@ -12,7 +12,7 @@ use qingjian_platform::Config;
 use super::controls::{language_label, small_label};
 use super::layout::{Layout, PAGE_PADDING, PAGE_WIDTH};
 use super::pages::{
-    AboutPage, AdvancedPage, CandidatesPage, CloudPage, DictionariesPage, FuzzyPage, GeneralPage,
+    AboutPage, AdvancedPage, CandidatesPage, ModelPage, DictionariesPage, FuzzyPage, GeneralPage,
     PhrasesPage, ShortcutsPage, UpdateStatus, UsagePage, build_about,
 };
 use super::panel::PreferencesPanel;
@@ -54,7 +54,7 @@ pub struct PreferencesWindow {
     dictionaries: DictionariesPage,
 
     /// 「云服务」页。
-    cloud: CloudPage,
+    model: ModelPage,
 
     /// 「高级」页。
     advanced: AdvancedPage,
@@ -114,8 +114,8 @@ impl PreferencesWindow {
         pages.push(page("词库", layout));
 
         let mut layout = new_layout();
-        let cloud = CloudPage::build(&mut layout, mtm, &target);
-        pages.push(page("云服务", layout));
+        let model = ModelPage::build(&mut layout, mtm, &target);
+        pages.push(page("本地模型", layout));
 
         let mut layout = new_layout();
         let advanced = AdvancedPage::build(&mut layout, mtm, &target);
@@ -192,7 +192,7 @@ impl PreferencesWindow {
             phrases,
             fuzzy,
             dictionaries,
-            cloud,
+            model,
             advanced,
             usage,
             about,
@@ -232,7 +232,6 @@ impl PreferencesWindow {
     pub fn sync(
         &self,
         config: &Config,
-        key_present: bool,
         error: Option<&str>,
         dictionaries: &[DictionaryInfo],
         update: &UpdateStatus,
@@ -244,9 +243,8 @@ impl PreferencesWindow {
         self.shortcuts.sync(config);
         self.phrases.sync(config);
         self.fuzzy.sync(config);
-        self.cloud.sync(
+        self.model.sync(
             config,
-            key_present,
             crate::app::paths::p2c_model_path().is_some()
                 || crate::app::paths::model_path().is_some(),
         );

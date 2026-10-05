@@ -50,9 +50,6 @@ pub enum Setting {
     /// `[fuzzy]` 里的一条规则，值是 [`FuzzyRules::NAMES`] 的下标。
     Fuzzy(usize),
 
-    /// `[predict] enabled`。
-    CloudEnabled,
-
     /// `[model] enabled`。
     LocalModelEnabled,
 
@@ -94,15 +91,6 @@ pub enum Setting {
 
     /// `[general] system_text_replacements`，勾选框：系统的文本替换并进自定义短语。
     SystemTextReplacements,
-
-    /// `[predict] base_url`。
-    BaseUrl,
-
-    /// `[predict] model`。
-    Model,
-
-    /// 密钥，写到 `.env`。
-    ApiKey,
 
     /// 「在编辑器中打开配置文件」按钮。
     OpenConfigFile,
@@ -170,9 +158,6 @@ pub enum Setting {
     /// 「关于」「高级」页「打包日志到桌面」按钮。
     ExportLogs,
 
-    /// `[predict] slots`，弹出菜单 0–4：第一页末尾留给云端词的格数。
-    CloudSlots,
-
     /// `[apps] english_candidates_off`，勾选框：勾上写缺省的终端 / 编辑器列表，去掉写空表。
     EnglishCandidatesOffInApps,
 
@@ -187,9 +172,6 @@ pub enum Setting {
 
     /// 「高级」页「清空输入日志」按钮。
     ClearInputLog,
-
-    /// 「云服务」页「测试连接」按钮。
-    TestCloud,
 
     /// 「关于」页「官网」按钮。
     OpenWebsite,
@@ -208,10 +190,6 @@ impl Setting {
             Self::ExpressionKey => 5,
             Self::QuestionKey => 6,
             Self::QuestionMark => 41,
-            Self::CloudEnabled => 7,
-            Self::BaseUrl => 8,
-            Self::Model => 9,
-            Self::ApiKey => 10,
             Self::OpenConfigFile => 11,
             Self::Layout => 12,
             Self::Preedit => 13,
@@ -231,13 +209,11 @@ impl Setting {
             Self::OpenLogDirectory => 22,
             Self::CopyDiagnostics => 23,
             Self::ExportLogs => 48,
-            Self::CloudSlots => 24,
             Self::EnglishCandidatesOffInApps => 25,
             Self::DeleteCandidateKeys => 26,
             Self::InputLog => 27,
             Self::Learning => 45,
             Self::ClearInputLog => 28,
-            Self::TestCloud => 29,
             Self::OpenWebsite => 30,
             Self::OpenRepository => 31,
             Self::LocalModelEnabled => 32,
@@ -274,10 +250,6 @@ impl Setting {
             5 => Self::ExpressionKey,
             6 => Self::QuestionKey,
             41 => Self::QuestionMark,
-            7 => Self::CloudEnabled,
-            8 => Self::BaseUrl,
-            9 => Self::Model,
-            10 => Self::ApiKey,
             11 => Self::OpenConfigFile,
             12 => Self::Layout,
             13 => Self::Preedit,
@@ -298,13 +270,11 @@ impl Setting {
             22 => Self::OpenLogDirectory,
             23 => Self::CopyDiagnostics,
             48 => Self::ExportLogs,
-            24 => Self::CloudSlots,
             25 => Self::EnglishCandidatesOffInApps,
             26 => Self::DeleteCandidateKeys,
             27 => Self::InputLog,
             45 => Self::Learning,
             28 => Self::ClearInputLog,
-            29 => Self::TestCloud,
             30 => Self::OpenWebsite,
             31 => Self::OpenRepository,
             32 => Self::LocalModelEnabled,
@@ -352,15 +322,11 @@ mod tests {
             Setting::Font,
             Setting::ExpressionKey,
             Setting::QuestionKey,
-            Setting::CloudEnabled,
             Setting::LocalModelEnabled,
             Setting::UpdateCheck,
             Setting::UpdateChannel,
             Setting::CheckUpdateNow,
             Setting::OpenDownload,
-            Setting::BaseUrl,
-            Setting::Model,
-            Setting::ApiKey,
             Setting::OpenConfigFile,
             Setting::Layout,
             Setting::Preedit,
@@ -378,7 +344,6 @@ mod tests {
             Setting::OpenLogDirectory,
             Setting::CopyDiagnostics,
             Setting::ExportLogs,
-            Setting::CloudSlots,
             Setting::EnglishCandidatesOffInApps,
             Setting::DeleteCandidateKeys,
             Setting::InputLog,
@@ -386,7 +351,6 @@ mod tests {
             Setting::ShiftLetter,
             Setting::HorizontalGrid,
             Setting::ClearInputLog,
-            Setting::TestCloud,
             Setting::OpenWebsite,
             Setting::OpenRepository,
             Setting::DictionaryEnabled(0),

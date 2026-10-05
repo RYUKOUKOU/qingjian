@@ -9,9 +9,8 @@ mod tests;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime};
 
-use qingjian_core::{Engine, Language, NoGlossFiller, NoPredictor, NoTranslator};
+use qingjian_core::{Engine, Language, NoTranslator};
 use qingjian_platform::{Config, code_tables};
-use qingjian_predict::{CloudGlossFiller, CloudPredictor, PredictConfig};
 
 pub(super) use self::state::ConfigReload;
 pub use self::state::DataDirs;
@@ -28,33 +27,6 @@ fn mtime(path: &Path) -> Option<SystemTime> {
     std::fs::metadata(path)
         .and_then(|meta| meta.modified())
         .ok()
-}
-
-/// 按 `[predict]` 接云联想与释义兜底；关着或缺密钥就退回本地实现。启动与热加载共用。
-pub fn attach_cloud(engine: &mut Engine, predict: &PredictConfig) {
-    if !predict.enabled {
-        tracing::info!("云联想未开启（[predict] enabled = false）");
-        engine.set_predictor(Box::new(NoPredictor));
-        engine.set_gloss_filler(Box::new(NoGlossFiller));
-        return;
-    }
-    match CloudPredictor::new(predict) {
-        Ok(predictor) => {
-            engine.set_predictor(Box::new(predictor));
-            tracing::info!(model = %predict.model, "云联想已接入");
-        }
-        Err(error) => {
-            tracing::warn!(%error, "云联想接入失败（缺 API key？），退回本地候选");
-            engine.set_predictor(Box::new(NoPredictor));
-        }
-    }
-    match CloudGlossFiller::new(predict) {
-        Ok(filler) => engine.set_gloss_filler(Box::new(filler)),
-        Err(error) => {
-            tracing::warn!(%error, "释义兜底未启用");
-            engine.set_gloss_filler(Box::new(NoGlossFiller));
-        }
-    }
 }
 
 /// 学习语言变了就换释义表：关是不翻译；换语言重装随包 + 个人释义表，没有这门语言的表或装不上就保持原样。
@@ -131,7 +103,6 @@ impl Router {
             dirs,
             code_files,
             last_mtime,
-            applied_predict: config.predict.clone(),
             applied_dictionaries: config.dictionaries.clone(),
             applied_aux_code: config.aux_code.clone(),
             dictionary_files,
@@ -223,10 +194,6 @@ impl Router {
             return;
         };
         reload.update = config.update.clone();
-        if config.predict != reload.applied_predict {
-            attach_cloud(&mut self.engine, &config.predict);
-            reload.applied_predict = config.predict.clone();
-        }
         let language = assembly::learning_language(config);
         if language != reload.applied_language
             && swap_translator(

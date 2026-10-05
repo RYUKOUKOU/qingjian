@@ -83,6 +83,8 @@ TSV 解析、查询与生成工具把 `lue` / `nue` 统一成 `lve` / `nve`。
 
 ## crates/qingjian-predict
 
+离线 fork 保留源码供 upstream 同步，所有应用和共享配置均不依赖它。以下记录仅描述保留的 upstream 开发模块。
+
 - `CloudPredictor`：`Predictor` trait 的网络实现（async-openai，OpenAI 兼容接口，默认 DeepSeek），后台线程防抖 / 缓存 / 超时，`submit` / `poll` 非阻塞。
   `PredictConfig` 是配置的 `[predict]` 分节。只在组句中联想，一次请求给云端词（容错校验后补进候选第一页末尾 `[predict] slots` 格，缺省 2，不预留不占位，
   前面的本地候选不挪；排布在 Core `CandidateLayout`）和整句补全（preedit 右侧，Tab）；上屏后不联想，本地历史不进请求。
@@ -146,7 +148,7 @@ P2C 自由生成实验：`--eval-text <集> --eval-generate data/models/hanzhang
 `Engine::sentence_paths` 的 `want` 参数控制算几条：拼写纠错对每个纠正候选都要转一次，那条路仍然只算一条。
 
 冷启动字词实验：`--eval-cold <样本.jsonl> --cold-output <新结果.jsonl>` 强制用缺省配置与内存学习器，
-与 `--config` / `--user-dict` / `--predict` / `--replay` 等冲突，不加载或删除个人数据。
+与 `--config` / `--user-dict` / `--replay` 等冲突，不加载或删除个人数据。
 每行样本字段 `id/text/keys/source/category`；按完整拼音查候选，不给上文、不上屏，解析失败也记录在分母中。
 领域词库用 `--extra-dict` 显式指定，`--neural` 可测字级重排；`--cold-model` 可同时测 P2C beam 5、固定上限 16 字的生成。
 实验合并策略保留原首选，将生成的新增汉字候选插在其后，再接原候选；保存全部候选、词库文本/读音覆盖及耗时。
@@ -171,7 +173,7 @@ P2C 自由生成实验：`--eval-text <集> --eval-generate data/models/hanzhang
 都还在读、文件不自动改写。
 
 
-`Config`（TOML 配置文件，`[general]` / `[shortcut]` / `[fuzzy]` / `[dictionaries]` / `[apps]` / `[predict]` 分节，首次运行写模板，
+`Config`（TOML 配置文件，`[general]` / `[shortcut]` / `[fuzzy]` / `[dictionaries]` / `[apps]` 分节，首次运行写模板，
 `set_value` 用 toml_edit 原地改键保留注释；`[model] enabled` 本地整句模型开关，`LocalModelConfig`；
 中英模式两项：`[shortcut] switch_mode`（`SwitchKeys`：勾选 shift / control / ctrl+alt+space，可多选，老配置的单个字符串照读）与 `[general] english_mode`（内置英文模式总开关））；
 `extra_dictionaries` 列出 / 加载随包领域词库与用户 `dicts/`
@@ -204,7 +206,7 @@ P2C 自由生成实验：`--eval-text <集> --eval-generate data/models/hanzhang
 
 测试工具，`cargo run -p qingjian-cli -- kaifa`。
 
-- `--predict` 强制开云联想并等结果打印，交互模式下上屏后也联想。
+- 离线 CLI 不提供 `--predict`。
 - `--wubi <码表>` 用形码码表（`词\t编码\t词频` 的 TSV）替代拼音：按键当编码按前缀查表，候选不带音节，上屏吃掉整段编码。
 - `--typing` 逐键计时（性能测试用 release 构建跑，目标每键 10 ms 以内）。
 - `--chinese-first` 打开中文优先（`[general] chinese_first = true` 的排法），配合 `--replay` 比两种英文词位置。
@@ -247,7 +249,7 @@ IMK 输入法，源码按 `app / host / imk / candidates / menubar / preferences
 - 输入法进程由 launchd 拉起，看不到 shell 的环境变量：密钥写进配置同目录的 `.env`（`QINGJIAN_API_KEY=...`，输入法启动时 dotenvy 读入）或 `config.toml` 的 `api_key`。
 - 本地整句模型：`bundle.sh` 把 `data/models/hanzhang-tongbian/`（或 `QINGJIAN_P2C_MODEL_DIR`）打进 `Resources/models/hanzhang-tongbian/`，通变优先；知微放 `Resources/models/hanzhang-zhiwei/` 作回退，用户目录的对应模型优先于随包同类模型，旧用户目录仍可读取。`host/model/mod.rs` 在后台线程加载并预热（首次 Metal 编译）后
   `set_async_sentence_scorer` 接上，`refresh` 每键先读应用光标前 64 字给 Engine 当前文、查询后 `schedule_rescoring`，`RescoreMonitor` 停键 80 ms 请求、20 ms 轮询，
-  结果到了重查一次只重画当前页（翻过页 / 动过高亮不动）；「云服务」页有开关（`[model] enabled`）。
+  结果到了重查一次只重画当前页（翻过页 / 动过高亮不动）；「本地模型」页有开关（`[model] enabled`）。
 - 端到端验证可用 `osascript` 的 System Events 往 TextEdit 发按键再读回文本（终端需要辅助功能权限；输入法得在中文模式）。
 
 ## apps/windows

@@ -32,7 +32,7 @@ impl Host {
         self.delete_keys = config.shortcut.delete_keys();
         self.translate_keys = config.shortcut.translate_selection;
         self.page_size = config.general.page_size();
-        self.cloud_slots = config.predict.slots;
+        self.cloud_slots = 0;
         self.page_keys = config.general.page_keys();
         self.preedit_mode = config.general.preedit;
         self.english_candidates = config.general.english_candidates;
@@ -53,32 +53,6 @@ impl Host {
             self.input_log_enabled = Some(config.general.input_log);
             self.open_input_log(config.general.input_log);
         }
-        if force || config.predict != self.applied_predict {
-            if config.predict.enabled {
-                // 没密钥等失败只记日志、退回不联想：输入优先于一切附加功能
-                match CloudPredictor::new(&config.predict) {
-                    Ok(predictor) => self.engine.set_predictor(Box::new(predictor)),
-                    Err(error) => {
-                        tracing::warn!(%error, "云联想未启用");
-                        self.engine.set_predictor(Box::new(NoPredictor));
-                    }
-                }
-                // 释义兜底随云联想一起开：释义表里没有的词上屏后问云端写进个人释义表
-                match CloudGlossFiller::new(&config.predict) {
-                    Ok(filler) => self.engine.set_gloss_filler(Box::new(filler)),
-                    Err(error) => {
-                        tracing::warn!(%error, "释义兜底未启用");
-                        self.engine.set_gloss_filler(Box::new(NoGlossFiller));
-                    }
-                }
-            } else {
-                self.engine.set_predictor(Box::new(NoPredictor));
-                self.engine.set_gloss_filler(Box::new(NoGlossFiller));
-            }
-            self.monitor.stop();
-            self.sentence = None;
-            self.applied_predict = config.predict.clone();
-        }
         if force || config.dictionaries != self.applied_dictionaries {
             self.reload_dictionaries();
         }
@@ -93,17 +67,10 @@ impl Host {
         let cloud_active = self.engine.prediction_enabled();
         self.indicator.set_cloud(cloud_active);
         self.indicator.update();
-        self.menu.sync(&config, cloud_active, self.settings.error());
-        let key_present = config
-            .predict
-            .api_key
-            .as_deref()
-            .is_some_and(|key| !key.trim().is_empty())
-            || std::env::var(&config.predict.api_key_env).is_ok_and(|key| !key.trim().is_empty());
+        self.menu.sync(&config, self.settings.error());
         self.dictionary_list = self.dictionary_infos();
         self.preferences.sync(
             &config,
-            key_present,
             self.settings.error(),
             &self.dictionary_list,
             &self.update_status,

@@ -5,7 +5,7 @@ use objc2::rc::Retained;
 use objc2::{MainThreadMarker, sel};
 use objc2_app_kit::{
     NSButton, NSColor, NSControl, NSControlStateValueOff, NSControlStateValueOn, NSFont,
-    NSPopUpButton, NSSecureTextField, NSTextAlignment, NSTextField,
+    NSPopUpButton, NSTextAlignment, NSTextField,
 };
 use objc2_foundation::{NSArray, NSRect, NSString};
 use qingjian_core::Language;
@@ -213,15 +213,7 @@ pub(super) fn text_field(
     field
 }
 
-pub(super) fn secure_field(
-    mtm: MainThreadMarker,
-    setting: Setting,
-    target: &PreferencesTarget,
-) -> Retained<NSSecureTextField> {
-    let field = NSSecureTextField::initWithFrame(mtm.alloc(), NSRect::ZERO);
-    editable(&field, setting, target);
-    field
-}
+
 
 fn editable(field: &NSTextField, setting: Setting, target: &PreferencesTarget) {
     field.setBezeled(true);

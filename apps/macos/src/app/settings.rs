@@ -146,7 +146,6 @@ impl Settings {
             Ok(config) => {
                 tracing::info!(
                     path = %path.display(),
-                    predict = config.predict.enabled,
                     fuzzy = config.fuzzy.any(),
                     "配置已加载"
                 );

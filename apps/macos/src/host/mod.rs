@@ -23,7 +23,7 @@ use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
 use objc2_foundation::{NSProcessInfo, NSRect, NSString};
 use qingjian_core::{
     Candidate, CandidateKind, Cell, CloudWord, EmojiTable, Engine, FuzzyRules, Language, ModeKeys,
-    NoGlossFiller, NoInputLogger, NoPredictor, NoTranslator, Prediction,
+    NoInputLogger, NoTranslator, Prediction,
 };
 use qingjian_dictionary::{Dictionary, WordList};
 use qingjian_learning::{FrequencyLearner, InputLog, UsageStats, VocabularyBook};
@@ -34,9 +34,6 @@ use qingjian_platform::{
     GeneralConfig, KeyCombo, LEARNING_LANGUAGE_OFF, LayoutMode, LocalModelConfig, LogLevel,
     Modifiers, PAGE_KEY_OPTIONS, PreeditMode, Scheme, ShortcutConfig, ThemeMode, UpdateChannel,
 };
-use qingjian_predict::{
-    CloudGlossFiller, CloudPredictor, ConnectionTest, PredictConfig, PredictError,
-};
 use qingjian_translate::{Glossary, LayeredTranslator, LevelTable, PersonalGlossary};
 
 use crate::app::BundleInfo;
@@ -46,7 +43,7 @@ use crate::error::HostError;
 use crate::menubar::{InputMenu, MenuAction, ModeIndicator};
 use crate::preferences::{PreferencesWindow, Setting, SettingValue, UpdateStatus};
 
-use cloud::{CloudTestMonitor, PredictMonitor};
+use cloud::PredictMonitor;
 use config::{ConfigWatch, TextReplacement};
 pub use dictionaries::DictionaryInfo;
 pub use init::init;
@@ -79,9 +76,6 @@ pub struct Host {
 
     /// 上次把学习数据落盘的时间；激活期间的定时器按 [`LEARNING_FLUSH_INTERVAL`] 再刷一次。
     pub last_flush: std::time::Instant,
-
-    /// 当前 Predictor 是按哪份 `[predict]` 建的；配置没变就不重建（重建会起新线程、丢缓存）。
-    applied_predict: PredictConfig,
 
     /// 附加词库是按哪份 `[dictionaries]` 装的；开关变了才重新加载。
     applied_dictionaries: DictionariesConfig,
@@ -151,12 +145,6 @@ pub struct Host {
 
     /// 联想结果轮询定时器。
     pub monitor: PredictMonitor,
-
-    /// 进行中的云服务连通性测试（「云服务」页「测试连接」按钮）；没在测为 `None`。
-    cloud_test: Option<ConnectionTest>,
-
-    /// 连通性测试的轮询定时器。
-    cloud_test_monitor: CloudTestMonitor,
 
     /// 本地整句模型的防抖与轮询定时器。
     rescore: RescoreMonitor,

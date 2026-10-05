@@ -70,10 +70,6 @@ pub struct Args {
     #[arg(long)]
     pub config: Option<PathBuf>,
 
-    /// 启用云联想（无视配置里的 enabled）；密钥来自配置或 QINGJIAN_API_KEY（`api_key_env`）
-    #[arg(long)]
-    pub predict: bool,
-
     /// 模糊音，逗号分隔（z-zh,c-ch,s-sh,n-l,f-h,l-r,an-ang,en-eng,in-ing），`all` 全开；给了就覆盖配置里的 [fuzzy]
     #[arg(long, value_delimiter = ',')]
     pub fuzzy: Vec<String>,
@@ -157,7 +153,7 @@ pub struct Args {
     pub eval_details: Option<PathBuf>,
 
     /// 冷启动字词评测：读取 JSONL，不加载个人配置或个人学习文件
-    #[arg(long, requires = "cold_output", conflicts_with_all = ["user_dict", "config", "predict", "replay", "eval_text", "english_mode", "shuangpin", "wubi", "aux_table", "tune", "fuzzy", "inputs", "neural_async"])]
+    #[arg(long, requires = "cold_output", conflicts_with_all = ["user_dict", "config", "replay", "eval_text", "english_mode", "shuangpin", "wubi", "aux_table", "tune", "fuzzy", "inputs", "neural_async"])]
     pub eval_cold: Option<PathBuf>,
 
     /// 冷启动逐词结果 JSONL（拒绝覆盖）

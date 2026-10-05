@@ -54,12 +54,6 @@ impl Host {
     pub fn perform(&mut self, action: MenuAction) {
         tracing::info!(?action, "菜单");
         match action {
-            MenuAction::ToggleCloud => {
-                let on = !self.settings.config().predict.enabled;
-                if self.settings.set_bool("predict", "enabled", on) {
-                    self.apply_config(false);
-                }
-            }
             MenuAction::ToggleFuzzy(index) => {
                 let name = FuzzyRules::NAMES[index];
                 let on = !self.settings.config().fuzzy.is_on(name);
@@ -332,9 +326,6 @@ impl Host {
                 self.settings
                     .set_bool("fuzzy", FuzzyRules::NAMES[index], on);
             }
-            (Setting::CloudEnabled, SettingValue::Bool(on)) => {
-                self.settings.set_bool("predict", "enabled", on);
-            }
             (Setting::LocalModelEnabled, SettingValue::Bool(on)) => {
                 self.settings.set_bool("model", "enabled", on);
             }
@@ -345,9 +336,6 @@ impl Host {
                 if let Some(channel) = UpdateChannel::ALL.get(index) {
                     self.settings.set_value("update", "channel", channel.key());
                 }
-            }
-            (Setting::CloudSlots, SettingValue::Index(index)) => {
-                self.settings.set_value("predict", "slots", index as i64);
             }
             (Setting::Traditional, SettingValue::Bool(on)) => {
                 self.settings.set_bool("general", "traditional", on);
@@ -393,45 +381,6 @@ impl Host {
             (Setting::Wubi, SettingValue::Bool(on)) => {
                 self.settings
                     .set_value("general", "wubi", if on { "wubi86" } else { "" });
-            }
-            // 文本框失焦也会发 action：值没变就不写，免得每次切窗口都重写一遍配置
-            (Setting::BaseUrl, SettingValue::Text(text)) => {
-                let text = text.trim();
-                if !text.is_empty() && text != config.predict.base_url {
-                    self.settings.set_value("predict", "base_url", text);
-                }
-            }
-            (Setting::Model, SettingValue::Text(text)) => {
-                let text = text.trim();
-                if !text.is_empty() && text != config.predict.model {
-                    self.settings.set_value("predict", "model", text);
-                }
-            }
-            (Setting::ApiKey, SettingValue::Text(text)) => {
-                let text = text.trim();
-                // 密码框看不见内容，粘贴多了（带上了终端提示符、命令）用户发现不了；这种值写进 .env 还会让整个文件解析失败
-                if text.chars().any(|c| !c.is_ascii_graphic()) {
-                    self.preferences.set_status(
-                        "密钥没有保存：里面有空格或非英文字符，多半是粘贴时多带了别的内容",
-                    );
-                    return;
-                }
-                if text.is_empty() {
-                    return;
-                }
-                if self.settings.set_env_var(&config.predict.api_key_env, text) {
-                    // 密钥换了必须重建 Predictor
-                    self.apply_config(true);
-                    self.preferences.set_status("密钥已保存");
-                } else {
-                    self.preferences
-                        .set_status("密钥没有保存：写不进配置目录的 .env，详情见日志");
-                }
-                return;
-            }
-            (Setting::TestCloud, _) => {
-                self.start_cloud_test();
-                return;
             }
             (Setting::OpenConfigFile, _) => {
                 if let Some(path) = self.settings.path() {
