@@ -156,9 +156,6 @@ switch_mode = ["shift"]
 # 任意修饰键组合（option / shift / control / command 用 + 连），偏好设置里点按钮录制；别用 control+数字（系统切桌面）和 command+数字（应用切标签页）
 translation = "option"
 translation_second = "shift+option"
-# 把应用里选中的文字译成学习语言（要开着云服务）：译文先出现在候选窗口，回车替换选中的文字，Esc 保留原文
-# 修饰键 + 一个字母或数字，任意组合；避开 ⌘T 这类应用常用键
-translate_selection = "control+option+t"
 # 数字键配这些修饰键删掉候选：用户词（云端选过的、自动造的）整个删掉，词库里的词清掉对它的学习记录。组句中要打感叹号先把词上屏
 delete_candidate = "shift"
 "#
@@ -176,8 +173,6 @@ switch_mode = ["shift"]
 # 任意修饰键组合（alt / shift / ctrl / win 用 + 连）。Alt+数字会被 Windows 当菜单快捷键截走，缺省用 Ctrl；组句时才拦，不打字时照常放行给应用
 translation = "ctrl"
 translation_second = "shift+ctrl"
-# 把应用里选中的文字译成学习语言（要开着云服务）：译文先出现在候选窗口，回车替换选中的文字，Esc 保留原文
-translate_selection = "ctrl+alt+t"
 # 数字键配这些修饰键删掉候选：用户词（云端选过的、自动造的）整个删掉，词库里的词清掉对它的学习记录。组句中要打感叹号先把词上屏
 delete_candidate = "shift"
 "#
@@ -264,7 +259,7 @@ system_text_replacements = true
 # 前缀模式键，只能是 v / u / i 之一且互不相同（这三个字母不是任何拼音音节的开头）
 # 表达式模式：v1+2 出 3，v123 出中文数字
 expression = "v"
-# 问字模式：usangemu 问「三个木」（云端答），u4e00 出码点对应的字符（本地答）
+# 问字模式：u4e00 出码点对应的字符（本地答）
 question = "u"
 # 没在组句时敲 ? 是否也进问字模式（中英文模式都行，后面跟字母才是问题，跟别的键还原成问号）；false 的话问号就是问号
 question_mark = false
@@ -441,7 +436,7 @@ impl Config {
             path: path.to_owned(),
             source: Box::new(source),
         })?;
-        // 分节不存在时先建成标准表，否则 toml_edit 会写成顶层的行内表 `predict = { enabled = true }`
+        // 分节不存在时先建成标准表，否则 toml_edit 会写成顶层的行内表 `model = { enabled = true }`
         if !document.get(section).is_some_and(|item| item.is_table()) {
             document[section] = toml_edit::table();
         }

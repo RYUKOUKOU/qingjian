@@ -124,7 +124,7 @@ impl Component for Settings {
             }
             Message::StatusBar(on) => self.save("status_bar", "enabled", on),
 
-            // 云服务页
+            // 本地模型页
             Message::LocalModel(on) => self.save("model", "enabled", on),
             // 快捷键页
             Message::PageKeys(Some(i)) if i < shortcut::PAGE_KEYS.len() => {
@@ -146,12 +146,6 @@ impl Component for Settings {
             Message::DeleteCandidate(Some(i)) if i < shortcut::MODIFIERS.len() => {
                 self.save("shortcut", "delete_candidate", shortcut::MODIFIERS[i].1);
             }
-            Message::TranslateSelection(Some(i)) if i < shortcut::MODIFIERS.len() => {
-                let key = self.config.shortcut.translate_selection.key;
-                let combo = format!("{}+{key}", shortcut::MODIFIERS[i].1);
-                self.save("shortcut", "translate_selection", combo);
-            }
-
             // 模糊音页
             Message::Fuzzy(key, on) => self.save("fuzzy", key, on),
 

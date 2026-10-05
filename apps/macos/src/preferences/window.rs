@@ -53,7 +53,7 @@ pub struct PreferencesWindow {
     /// 「词库」页。
     dictionaries: DictionariesPage,
 
-    /// 「云服务」页。
+    /// 「本地模型」页。
     model: ModelPage,
 
     /// 「高级」页。
@@ -224,7 +224,7 @@ impl PreferencesWindow {
         self.panel.present();
     }
 
-    /// 按配置刷新所有控件。`key_present` 是密钥已经有了（环境或配置里）；密钥框永远不回显值。
+    /// 按配置刷新所有本地控件。
     pub fn sync(
         &self,
         config: &Config,

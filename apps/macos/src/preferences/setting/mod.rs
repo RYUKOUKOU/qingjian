@@ -107,8 +107,6 @@ pub enum Setting {
     /// `[shortcut] translation_second`，同上。
     TranslationSecondKeys,
 
-    /// `[shortcut] translate_selection`，快捷键录制按钮（修饰键 + 字母）。
-    TranslateSelectionKeys,
 
     /// 「恢复默认快捷键」按钮：翻页键、模式键、三组译词 / 翻译快捷键全部回缺省。
     ResetShortcuts,
@@ -161,8 +159,6 @@ pub enum Setting {
     /// 「高级」页「清空输入日志」按钮。
     ClearInputLog,
 
-    /// 「关于」页「GitHub」按钮。
-    OpenRepository,
 }
 
 impl Setting {
@@ -184,7 +180,6 @@ impl Setting {
             Self::HorizontalGrid => 51,
             Self::TranslationKeys => 15,
             Self::TranslationSecondKeys => 16,
-            Self::TranslateSelectionKeys => 17,
             Self::ResetShortcuts => 18,
             Self::ImportDictionary => 19,
             Self::Scheme => 20,
@@ -238,7 +233,6 @@ impl Setting {
             51 => Self::HorizontalGrid,
             15 => Self::TranslationKeys,
             16 => Self::TranslationSecondKeys,
-            17 => Self::TranslateSelectionKeys,
             18 => Self::ResetShortcuts,
             19 => Self::ImportDictionary,
             20 => Self::Scheme,
@@ -302,7 +296,6 @@ mod tests {
             Setting::EnglishCandidates,
             Setting::TranslationKeys,
             Setting::TranslationSecondKeys,
-            Setting::TranslateSelectionKeys,
             Setting::ResetShortcuts,
             Setting::ImportDictionary,
             Setting::Scheme,

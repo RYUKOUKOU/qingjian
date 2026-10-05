@@ -37,7 +37,7 @@ pub(crate) enum Message {
     Font(String),
     StatusBar(bool),
 
-    // 云服务页
+    // 本地模型页
     LocalModel(bool),
     // 快捷键页
     PageKeys(Option<usize>),
@@ -47,8 +47,6 @@ pub(crate) enum Message {
     Translation(Option<usize>),
     TranslationSecond(Option<usize>),
     DeleteCandidate(Option<usize>),
-    /// 只换修饰键，字母键固定用当前的。
-    TranslateSelection(Option<usize>),
 
     // 模糊音页
     /// 配置键 + 新值。
