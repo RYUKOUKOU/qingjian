@@ -93,8 +93,4 @@ pub(crate) enum Message {
     ExportLogs,
     ClearInputLog,
 
-    // 关于页
-    OpenWebsite,
-
-    OpenRepository,
 }

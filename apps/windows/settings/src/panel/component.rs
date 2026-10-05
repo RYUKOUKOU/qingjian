@@ -8,7 +8,7 @@ use windows_reactor::*;
 
 use super::controls::{export_logs, log_dir, open_in_editor, open_with_explorer};
 use super::notice::Notice;
-use super::pages::{about, aux_code, dictionaries, general, shortcut};
+use super::pages::{aux_code, dictionaries, general, shortcut};
 use super::recorder::Recorder;
 use super::{Message, Settings};
 
@@ -33,7 +33,7 @@ impl Component for Settings {
         }
     }
 
-    fn update(&mut self, message: Message, context: &ComponentContext<Self>) {
+    fn update(&mut self, message: Message, _context: &ComponentContext<Self>) {
         match message {
             Message::Navigate(Some(tag)) => {
                 self.page = tag;
@@ -243,8 +243,6 @@ impl Component for Settings {
             }
 
             // 关于页
-            Message::OpenWebsite => open_with_explorer(about::WEBSITE_URL),
-            Message::OpenRepository => open_with_explorer(about::REPOSITORY_URL),
 
             // 下拉被清空 / 越界：不改
             _ => {}

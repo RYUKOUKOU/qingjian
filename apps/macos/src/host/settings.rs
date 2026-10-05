@@ -397,14 +397,6 @@ impl Host {
                 let level = if on { LogLevel::Debug } else { LogLevel::Info };
                 self.settings.set_value("general", "log_level", level.key());
             }
-            (Setting::OpenWebsite, _) => {
-                open_with_system(&[crate::preferences::WEBSITE_URL]);
-                return;
-            }
-            (Setting::OpenRepository, _) => {
-                open_with_system(&[crate::preferences::REPOSITORY_URL]);
-                return;
-            }
             (Setting::OpenLogDirectory, _) => {
                 if let Some(dir) = logging::log_dir() {
                     open_with_system(&[&dir.to_string_lossy()]);

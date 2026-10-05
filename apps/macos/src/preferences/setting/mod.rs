@@ -161,9 +161,6 @@ pub enum Setting {
     /// 「高级」页「清空输入日志」按钮。
     ClearInputLog,
 
-    /// 「关于」页「官网」按钮。
-    OpenWebsite,
-
     /// 「关于」页「GitHub」按钮。
     OpenRepository,
 }
@@ -202,8 +199,6 @@ impl Setting {
             Self::InputLog => 27,
             Self::Learning => 45,
             Self::ClearInputLog => 28,
-            Self::OpenWebsite => 30,
-            Self::OpenRepository => 31,
             Self::LocalModelEnabled => 32,
             Self::FullWidthPunctuation => 33,
             Self::SelectPhrase => 34,
@@ -259,8 +254,6 @@ impl Setting {
             27 => Self::InputLog,
             45 => Self::Learning,
             28 => Self::ClearInputLog,
-            30 => Self::OpenWebsite,
-            31 => Self::OpenRepository,
             32 => Self::LocalModelEnabled,
             33 => Self::FullWidthPunctuation,
             34 => Self::SelectPhrase,
@@ -327,8 +320,6 @@ mod tests {
             Setting::ShiftLetter,
             Setting::HorizontalGrid,
             Setting::ClearInputLog,
-            Setting::OpenWebsite,
-            Setting::OpenRepository,
             Setting::DictionaryEnabled(0),
             Setting::DictionaryEnabled(MAX_DICTIONARIES - 1),
             Setting::DictionaryRemove(3),

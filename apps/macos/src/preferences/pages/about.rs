@@ -14,7 +14,7 @@ use crate::preferences::setting::Setting;
 use crate::preferences::target::PreferencesTarget;
 
 /// 许可说明，与仓库根目录 `LICENSE` 一致。
-pub const LICENSE_NOTE: &str = "自由软件，GPL-3.0-or-later 许可证：可以自由使用、修改与再分发，修改后分发须同样开源。官方渠道免费。";
+pub const LICENSE_NOTE: &str = "自由软件，GPL-3.0-or-later 许可证：可以自由使用、修改与再分发，修改后分发须同样开源。";
 
 /// 随包数据的来源与许可证。改数据来源时同步改这里和 `apps/macos/scripts/bundle.sh` 里 `pack` 的署名。
 pub const ATTRIBUTIONS: &[(&str, &str)] = &[
@@ -42,14 +42,8 @@ pub const ATTRIBUTIONS: &[(&str, &str)] = &[
     ),
 ];
 
-/// 官网。
-pub const WEBSITE_URL: &str = "https://qingjian.app";
-
-/// 源码与问题反馈。
-pub const REPOSITORY_URL: &str = "https://github.com/qingjian-team";
-
 /// 隐私说明。
-pub const PRIVACY_NOTE: &str = "青简不上传任何数据。开着「自动检查更新」时每天向官网读一次版本列表，请求不带任何标识，上面可以关。开着云联想或翻译时，光标附近的文字与拼音会发给你在「云服务」页填的 AI 服务商（缺省 DeepSeek）的服务器，不经过作者。「高级」页的输入日志只写在这台电脑的数据目录里，可以关掉或清空。";
+pub const PRIVACY_NOTE: &str = "离线版本不访问网络。词库、模型推理、学习数据与日志均在本机处理。「高级」页的输入日志可以关闭或清空。";
 
 /// 反馈方式。
 pub const FEEDBACK_NOTE: &str = "遇到问题点「打包日志到桌面」，把生成的 zip 发给作者即可（含日志与配置文件，不含密钥），再附上「复制诊断信息」的内容。缺省日志不含你敲的内容；排查排序问题时作者可能请你在「高级」页临时打开详细日志。";
@@ -74,11 +68,7 @@ pub fn build(
         ROW_HEIGHT * 0.7,
     );
     layout.next_row(ROW_HEIGHT * 0.7);
-    let website = button(mtm, "官网", Setting::OpenWebsite, target);
-    let repository = button(mtm, "GitHub", Setting::OpenRepository, target);
-    layout.place(&website, PAGE_PADDING, 150.0, ROW_HEIGHT + 4.0);
-    layout.place(&repository, PAGE_PADDING + 160.0, 150.0, ROW_HEIGHT + 4.0);
-    layout.next_row(ROW_HEIGHT + 4.0);
+    note_full(layout, mtm, "Based on qingjian-team/qingjian");
     note_full(layout, mtm, LICENSE_NOTE);
     layout.space(GROUP_GAP);
 

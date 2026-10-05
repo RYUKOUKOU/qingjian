@@ -1,3 +1,5 @@
+> 离线 fork 不提供在线反馈、Issue 或 GitHub 网页入口。日志目录、日志导出与诊断信息功能保留；下面是 upstream 的参考文档。
+
 ---
 title: 遇到问题
 order: 3

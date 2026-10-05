@@ -13,7 +13,6 @@ mod shortcuts;
 mod usage;
 
 pub(super) use about::build as build_about;
-pub use about::{REPOSITORY_URL, WEBSITE_URL};
 pub(super) use advanced::AdvancedPage;
 pub(super) use candidates::CandidatesPage;
 pub(super) use model::ModelPage;

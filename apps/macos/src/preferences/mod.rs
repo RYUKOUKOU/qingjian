@@ -25,7 +25,6 @@ use objc2_app_kit::{NSButton, NSControlStateValueOn, NSPopUpButton, NSTextField}
 
 pub use file_dialog::choose_dictionary_file;
 pub use key_recorder::KeyRecorder;
-pub use pages::{REPOSITORY_URL, WEBSITE_URL};
 pub use setting::{Setting, SettingValue};
 pub use window::PreferencesWindow;
 

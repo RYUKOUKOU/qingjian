@@ -8,12 +8,10 @@ use crate::panel::{Message, Settings};
 /// QINGJIAN_VERSION 由 build.rs 给：-dev 版接 git 短哈希。
 pub(crate) const VERSION: &str = env!("QINGJIAN_VERSION");
 
-pub(crate) const WEBSITE_URL: &str = "https://qingjian.app";
 
-pub(crate) const REPOSITORY_URL: &str = "https://github.com/qingjian-team";
 
 /// 与仓库根 `LICENSE` 一致。
-const LICENSE_NOTE: &str = "自由软件，GPL-3.0-or-later 许可证：可以自由使用、修改与再分发，修改后分发须同样开源。官方渠道免费。";
+const LICENSE_NOTE: &str = "自由软件，GPL-3.0-or-later 许可证：可以自由使用、修改与再分发，修改后分发须同样开源。";
 
 /// 与 macOS「关于」页一致。
 const ATTRIBUTIONS: &[(&str, &str)] = &[
@@ -45,7 +43,7 @@ const ATTRIBUTIONS: &[(&str, &str)] = &[
     ),
 ];
 
-const PRIVACY_NOTE: &str = "青简不上传任何数据。开着「自动检查更新」时每天向官网读一次版本列表，请求不带任何标识，上面可以关。开着云联想时，光标附近的文字与拼音会发给你在「云服务」页填的 AI 服务商（缺省 DeepSeek）的服务器，不经过作者。「高级」页的输入日志只写在本机，可以关掉或清空。";
+const PRIVACY_NOTE: &str = "离线版本不访问网络。词库、模型推理、学习数据与日志均在本机处理。「高级」页的输入日志可以关闭或清空。";
 
 const FEEDBACK_NOTE: &str = "遇到问题点「打包日志到桌面」，把生成的 zip 发给作者即可（含三个进程的日志与配置文件，不含密钥）。缺省日志不含你敲的内容；排查排序问题时作者可能请你在「高级」页临时打开详细日志。";
 
@@ -70,12 +68,6 @@ pub(crate) fn view(_settings: &Settings, context: &mut ViewContext<Settings>) ->
             .spacing(12.0)
             .children((
                 Button::new()
-                    .on_click(context.message(Message::OpenWebsite))
-                    .content("官网"),
-                Button::new()
-                    .on_click(context.message(Message::OpenRepository))
-                    .content("GitHub"),
-                Button::new()
                     .on_click(context.message(Message::OpenDataDir))
                     .content("打开数据目录"),
                 Button::new()
@@ -85,6 +77,7 @@ pub(crate) fn view(_settings: &Settings, context: &mut ViewContext<Settings>) ->
                     .on_click(context.message(Message::ExportLogs))
                     .content("打包日志到桌面"),
             )),
+        note("Based on qingjian-team/qingjian"),
         note(LICENSE_NOTE),
         TextBlock::new()
             .text("数据来源与署名")

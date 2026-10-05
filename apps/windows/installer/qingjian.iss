@@ -26,7 +26,6 @@
 #endif
 #define AppName "青简"
 #define Publisher "青简"
-#define WebsiteUrl "https://qingjian.im"
 ; 脚本相对仓库根（ime/）：installer → windows → apps → ime
 #define Repo "..\..\.."
 ; 按版本起名的 TSF DLL（见文件头「升级」）。
@@ -38,7 +37,6 @@ AppId={{A7E3C1F2-5B94-4D6A-9C0E-2F8B1D3A6E70}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#Publisher}
-AppSupportURL={#WebsiteUrl}
 VersionInfoVersion={#AppVersionNumeric}
 DefaultDirName={autopf}\Qingjian
 DefaultGroupName={#AppName}
