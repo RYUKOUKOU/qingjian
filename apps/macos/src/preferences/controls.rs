@@ -109,19 +109,6 @@ pub(super) fn caption(mtm: MainThreadMarker, text: &str) -> Retained<NSTextField
     label
 }
 
-/// 一行「标题 + 控件」，控件占满控件列。
-pub(super) fn row_control(
-    layout: &mut Layout,
-    mtm: MainThreadMarker,
-    title: &str,
-    control: &NSControl,
-) {
-    let label = caption(mtm, title);
-    layout.place(&label, PAGE_PADDING, LABEL_WIDTH, ROW_HEIGHT);
-    layout.place(control, CONTROL_X, layout.control_width(), ROW_HEIGHT);
-    layout.next_row(ROW_HEIGHT);
-}
-
 pub(super) fn row_popup(
     layout: &mut Layout,
     mtm: MainThreadMarker,
