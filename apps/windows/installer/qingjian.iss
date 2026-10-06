@@ -39,6 +39,11 @@ AppVersion={#AppVersion}
 AppPublisher={#Publisher}
 VersionInfoVersion={#AppVersionNumeric}
 DefaultDirName={autopf}\Qingjian
+; 固定目录发现旧版，不读取卸载注册表决定安装位置。
+UsePreviousAppDir=no
+DisableDirPage=yes
+CreateUninstallRegKey=no
+Uninstallable=yes
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 ArchitecturesAllowed=x64compatible
@@ -51,7 +56,6 @@ CloseApplications=no
 OutputDir={#Repo}\target\installer
 OutputBaseFilename=qingjian-{#AppVersion}-windows-x86_64-setup
 SetupIconFile={#Repo}\apps\windows\tsf\resources\qingjian.ico
-UninstallDisplayIcon={app}\qingjian.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -154,6 +158,7 @@ Type: filesandordirs; Name: "{app}\codes"
 ; 历次升级留下的旧版本 DLL（正常在升级时就删了；仍被占用的会留到这里）。
 Type: files; Name: "{app}\qingjian_tsf-*.dll"
 Type: files; Name: "{app}\qingjian-server.old-*.exe"
+Type: files; Name: "{app}\offline-install.ini"
 
 [Code]
 function CreateMutex(Attributes: Longint; InitialOwner: BOOL; Name: String): THandle;
@@ -213,10 +218,39 @@ begin
   end;
 end;
 
+{ 只按目标目录内的 Server 和版本标记识别升级，不依赖卸载注册表。 }
+procedure DetectPreviousInstallation;
+var
+  Path, Version: String;
+begin
+  Path := ExpandConstant('{app}\qingjian-server.exe');
+  if FileExists(Path) then
+  begin
+    Version := GetIniString('Install', 'Version', '', ExpandConstant('{app}\offline-install.ini'));
+    if Version = '' then
+      if not GetVersionNumbersString(Path, Version) then
+        Version := 'unknown';
+    Log('安装目录发现旧版: ' + Version + ' (' + Path + ')');
+  end;
+end;
+
+{ 迁移旧包时，仅清理安装位置与本次目标一致的本产品卸载条目。 }
+procedure RemoveLegacyUninstallEntry(Root: Integer);
+var
+  Key, Location: String;
+begin
+  Key := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{A7E3C1F2-5B94-4D6A-9C0E-2F8B1D3A6E70}_is1';
+  if RegQueryStringValue(Root, Key, 'InstallLocation', Location) then
+    if CompareText(AddBackslash(Location), AddBackslash(ExpandConstant('{app}'))) = 0 then
+      if not RegDeleteKeyIncludingSubkeys(Root, Key) then
+        Log('无法清理旧版卸载列表条目');
+end;
+
 { 覆盖前先结束 Server 与设置程序（只有这两个 exe 要覆盖；DLL 按版本并排装，不用关应用）。
   没在跑时 taskkill 返回非 0，忽略。 }
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
+  DetectPreviousInstallation;
   RetireServerExe;
   KillProcess('qingjian-server.exe');
   KillProcess('qingjian-settings.exe');
@@ -286,6 +320,11 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
+    if not SetIniString('Install', 'Version', '{#AppVersion}', ExpandConstant('{app}\offline-install.ini')) then
+      Log('无法保存安装版本标记');
+    RemoveLegacyUninstallEntry(HKLM64);
+    RemoveLegacyUninstallEntry(HKLM32);
+    RemoveLegacyUninstallEntry(HKCU);
     DeleteLegacyLogonTask;
     DeleteStaleDlls;
     DeleteRetiredServers;

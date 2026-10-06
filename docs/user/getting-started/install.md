@@ -42,4 +42,6 @@ description: macOS 与 Windows 的安装步骤：系统要求、安装包、首�
 
 ## 升级与卸载
 
+Windows 离线版固定安装到 `C:\Program Files\Qingjian`，通过该目录中的程序和版本标记识别旧版，重复安装会覆盖更新；不登记到控制面板或已安装应用列表。
+
 升级时直接安装新版安装包，学习数据与设置均保留。卸载见 [卸载](../help/uninstall.md)。
