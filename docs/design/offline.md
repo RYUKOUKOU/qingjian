@@ -63,3 +63,9 @@ Windows 的旧 IPC 下载命令保留序列化兼容，但处理端忽略它，�
 - Linux：监控 server 与 fcitx5，Unix domain socket 为允许的本地 IPC；可用 `strace -f -e trace=network` 记录 socket 调用。
 - 每个平台均要求没有 AF_INET / AF_INET6 出站请求、没有任何 HTTP 请求（包括 localhost）。
 - 本机编译 / CI 通过不能声称真机运行与抓包通过；未执行的项目标为待验收。
+
+## Windows 安装包下载
+
+推送 `offline` 后，`offline-windows-installer` 工作流沿用 upstream 的数据锁、模型和 Inno 打包脚本，执行安装 / 重装 / 卸载回归，再上传安装包与 SHA256SUMS 为 Actions artifact（保留 14 天）。构建阶段允许下载数据、SDK 和工具；不发布更新索引或官网。
+
+离线包不登记卸载列表，固定默认安装目录中保留卸载器和版本标记；目录探测不依赖注册表。未签名包沿用 upstream 的 `uiAccess=0` 行为，真实输入、模型和网络抓包仍需 Windows 真机验收。
