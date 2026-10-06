@@ -5,10 +5,7 @@ use std::time::{Instant, SystemTime};
 
 use qingjian_core::Language;
 use qingjian_dictionary::Dictionary;
-use qingjian_platform::{
-    AuxCodeConfig, DictionariesConfig, UpdateConfig, code_tables, extra_dictionaries,
-};
-use qingjian_predict::PredictConfig;
+use qingjian_platform::{AuxCodeConfig, DictionariesConfig, code_tables, extra_dictionaries};
 
 /// 随包与用户数据目录：启动与热加载用的是同一批（词库、码表）。
 /// 分开传参数会越传越长，且热加载与原路径不一致时找不到文件。
@@ -69,9 +66,6 @@ pub(crate) struct ConfigReload {
     /// 上次看到的 mtime。
     pub(super) last_mtime: Option<SystemTime>,
 
-    /// 已应用的 `[predict]`。
-    pub(super) applied_predict: PredictConfig,
-
     /// 已应用的 `[dictionaries]`。
     pub(super) applied_dictionaries: DictionariesConfig,
 
@@ -83,12 +77,6 @@ pub(crate) struct ConfigReload {
 
     /// 最近加载的用户词库文件快照（路径、修改时间、长度）。
     pub(super) dictionary_files: Vec<(PathBuf, Option<SystemTime>, u64)>,
-
-    /// 当前的 `[update]`。
-    pub(super) update: UpdateConfig,
-
-    /// 检查更新：结果写进用户目录的 `update.json`，设置程序的「关于」页读它；拿不到用户目录时没有。
-    pub(super) updates: Option<qingjian_update::Checker>,
 }
 
 impl ConfigReload {

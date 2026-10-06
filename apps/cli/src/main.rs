@@ -23,7 +23,6 @@ use qingjian_dictionary::{AuxCodeLookup, AuxCodeTable, CodeTable, Dictionary, Wo
 use qingjian_learning::FrequencyLearner;
 use qingjian_lm::BigramModel;
 use qingjian_platform::{Config, Scheme};
-use qingjian_predict::CloudPredictor;
 use qingjian_translate::Glossary;
 
 use crate::args::Args;
@@ -279,15 +278,10 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
         .clone()
         .unwrap_or_else(args::default_config_file);
     let mut config = if args.eval_cold.is_some() {
-        let mut isolated = Config::default();
-        isolated.predict.enabled = false;
-        isolated
+        Config::default()
     } else {
         Config::load(&config_path)?
     };
-    if args.predict {
-        config.predict.enabled = true;
-    }
     if !args.fuzzy.is_empty() {
         let mut rules = FuzzyRules::default();
         for name in &args.fuzzy {
@@ -344,10 +338,6 @@ fn build_engine(args: &Args) -> Result<Engine, CliError> {
         engine.set_aux_codes(tables);
         // CLI 没有配置开关：给了码表即开辅码（缺省关），replay 统计不哑
         engine.set_aux_enabled(true);
-    }
-    if config.predict.enabled {
-        let predictor = CloudPredictor::new(&config.predict)?;
-        engine = engine.with_predictor(Box::new(predictor));
     }
     Ok(engine)
 }

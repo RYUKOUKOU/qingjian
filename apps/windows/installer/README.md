@@ -3,6 +3,12 @@
 用 [Inno Setup](https://jrsoftware.org/isinfo.php) 打的安装包，把 TSF DLL（64 位与 32 位各一份）、Server、设置程序与随包数据一起装进
 `C:\Program Files\Qingjian`，注册文本服务，并设登录自启。对应 macOS 的 pkg。
 
+## 离线版安装与卸载
+
+固定安装到 `C:\Program Files\Qingjian`，不通过卸载注册表恢复目录。安装前读取目录中的 Server 和 `offline-install.ini` 版本标记，随后复用原有覆盖、DLL 换名和清理流程。安装后更新版本标记。
+
+不创建控制面板 / 已安装应用条目；从旧包迁移时只删除 AppId 与安装位置均匹配的旧卸载条目。保留目录内 `unins000.exe` 和开始菜单卸载快捷方式，卸载仍反注册输入法并保留用户数据。
+
 ## 安装布局
 
 ```

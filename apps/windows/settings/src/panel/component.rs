@@ -2,14 +2,13 @@
 
 use qingjian_platform::{
     CandidateRenderer, Config, DEFAULT_ENGLISH_CANDIDATES_OFF_WINDOWS, LayoutMode, LogLevel,
-    PreeditMode, ShiftLetter, ThemeMode, UpdateChannel,
+    PreeditMode, ShiftLetter, ThemeMode,
 };
 use windows_reactor::*;
 
-use super::cloud_status::CloudStatus;
 use super::controls::{export_logs, log_dir, open_in_editor, open_with_explorer};
 use super::notice::Notice;
-use super::pages::{about, aux_code, cloud, dictionaries, general, shortcut};
+use super::pages::{aux_code, dictionaries, general, shortcut};
 use super::recorder::Recorder;
 use super::{Message, Settings};
 
@@ -25,22 +24,16 @@ impl Component for Settings {
             config,
             path,
             page: "general".to_string(),
-            cloud_status: CloudStatus::Idle,
             recorder: Recorder::Idle,
             record_box: ElementRef::new(),
             notice: Notice::default(),
-            update_state: Self::update_state_path()
-                .map(|path| qingjian_update::UpdateState::load(&path))
-                .unwrap_or_default(),
-            update_checking: false,
-            update_error: None,
             dictionary_status: String::new(),
             families: qingjian_render::system_fonts::families(),
             font_query: None,
         }
     }
 
-    fn update(&mut self, message: Message, context: &ComponentContext<Self>) {
+    fn update(&mut self, message: Message, _context: &ComponentContext<Self>) {
         match message {
             Message::Navigate(Some(tag)) => {
                 self.page = tag;
@@ -131,34 +124,8 @@ impl Component for Settings {
             }
             Message::StatusBar(on) => self.save("status_bar", "enabled", on),
 
-            // 云服务页
+            // 本地模型页
             Message::LocalModel(on) => self.save("model", "enabled", on),
-            Message::CloudEnabled(on) => self.save("predict", "enabled", on),
-            Message::CloudApiKey(value) => self.save("predict", "api_key", value),
-            Message::CloudModel(value) => self.save("predict", "model", value),
-            Message::CloudBaseUrl(value) => self.save("predict", "base_url", value),
-            Message::CloudSlots(Some(value)) => {
-                let slots = (value.round() as i64).clamp(0, 9);
-                self.save("predict", "slots", slots);
-            }
-            Message::CloudSentence(on) => self.save("predict", "sentence", on),
-            Message::TestConnection => {
-                if matches!(self.cloud_status, CloudStatus::Testing) {
-                    return;
-                }
-                self.cloud_status = CloudStatus::Testing;
-                let config = self.config.predict.clone();
-                context.spawn_background(move |cancel| {
-                    Message::CloudTestDone(cloud::run_test(&config, &cancel))
-                });
-            }
-            Message::CloudTestDone(result) => {
-                self.cloud_status = match result {
-                    Ok(message) => CloudStatus::Ok(message),
-                    Err(message) => CloudStatus::Failed(message),
-                };
-            }
-
             // 快捷键页
             Message::PageKeys(Some(i)) if i < shortcut::PAGE_KEYS.len() => {
                 self.save("general", "page_keys", shortcut::PAGE_KEYS[i].1);
@@ -179,12 +146,6 @@ impl Component for Settings {
             Message::DeleteCandidate(Some(i)) if i < shortcut::MODIFIERS.len() => {
                 self.save("shortcut", "delete_candidate", shortcut::MODIFIERS[i].1);
             }
-            Message::TranslateSelection(Some(i)) if i < shortcut::MODIFIERS.len() => {
-                let key = self.config.shortcut.translate_selection.key;
-                let combo = format!("{}+{key}", shortcut::MODIFIERS[i].1);
-                self.save("shortcut", "translate_selection", combo);
-            }
-
             // 模糊音页
             Message::Fuzzy(key, on) => self.save("fuzzy", key, on),
 
@@ -276,39 +237,6 @@ impl Component for Settings {
             }
 
             // 关于页
-            Message::OpenWebsite => open_with_explorer(about::WEBSITE_URL),
-            Message::OpenDownload => open_with_explorer(qingjian_update::DOWNLOAD_URL),
-
-            // 关于页：检查更新
-            Message::UpdateCheck(on) => self.save("update", "check", on),
-            Message::UpdateChannel(Some(i)) if i < UpdateChannel::ALL.len() => {
-                self.save("update", "channel", UpdateChannel::ALL[i].key());
-            }
-            Message::CheckUpdateNow => {
-                let Some(path) = Self::update_state_path() else {
-                    return;
-                };
-                if self.update_checking {
-                    return;
-                }
-                self.update_checking = true;
-                self.update_error = None;
-                let config = self.config.update.clone();
-                context.spawn_background(move |_cancel| {
-                    let result =
-                        qingjian_update::Checker::check_blocking(&path, about::VERSION, &config);
-                    Message::UpdateChecked(result.map(|r| r.map_err(|error| error.to_string())))
-                });
-            }
-            Message::UpdateChecked(result) => {
-                self.update_checking = false;
-                match result {
-                    Some(Ok(state)) => self.update_state = state,
-                    Some(Err(error)) => self.update_error = Some(error),
-                    None => {}
-                }
-            }
-            Message::OpenRepository => open_with_explorer(about::REPOSITORY_URL),
 
             // 下拉被清空 / 越界：不改
             _ => {}
@@ -336,7 +264,7 @@ impl Component for Settings {
             item("general", "通用", Symbol::Setting),
             item("candidates", "候选窗口", Symbol::View),
             item("shortcut", "快捷键", Symbol::Keyboard),
-            item("cloud", "云服务", Symbol::World),
+            item("model", "本地模型", Symbol::Setting),
             item("fuzzy", "模糊音", Symbol::Audio),
             item("dictionaries", "词库", Symbol::Library),
             item("aux_code", "辅码", Symbol::Character),

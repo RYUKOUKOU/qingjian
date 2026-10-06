@@ -186,7 +186,6 @@ fn main() {
     engine.set_shift_letter_compose(config.general.shift_letter.compose());
     engine.set_shuangpin_raw_preedit(config.general.shuangpin_raw_preedit);
     engine.log_session(env!("CARGO_PKG_VERSION"), "windows");
-    dispatch::attach_cloud(&mut engine, &config.predict);
     let router_config = RouterConfig::from(&config);
     let mut router = Router::new(engine, router_config.clone());
     let model_path = dispatch::find_model(user_dir().as_deref(), &root);
@@ -217,7 +216,6 @@ fn main() {
         theme = router_config.theme.key(),
         scheme = %if config.general.scheme_label().is_empty() { "全拼".to_owned() } else { config.general.scheme_label() },
         fuzzy = config.fuzzy.any(),
-        cloud = config.predict.enabled,
         model = model_path.as_deref().map(|p| p.display().to_string()).unwrap_or_default(),
         model_enabled = config.model.enabled,
         sessions = router.session_count(),

@@ -152,3 +152,24 @@ fn dictionary_changes_do_not_retry_broken_config() {
     drop(router);
     std::fs::remove_dir_all(&dir).unwrap();
 }
+
+#[test]
+fn legacy_cloud_configuration_cannot_enable_prediction_on_reload() {
+    let dir = std::env::temp_dir().join(format!("qingjian-offline-reload-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("config.toml");
+    std::fs::write(&path, "[model]\nenabled = false\n").unwrap();
+    let config = Config::load(&path).unwrap();
+    let dictionary = Dictionary::parse("你好\tni hao\t100\n").unwrap();
+    let mut router = Router::new(Engine::new(dictionary), RouterConfig::from(&config));
+    router.watch_config(&config, path.clone(), dir.clone(), DataDirs::default());
+    assert!(!router.engine.prediction_enabled());
+    std::fs::write(&path, "[model]\nenabled = false\n[predict]\nenabled = true\nbase_url = \"https://api.deepseek.com\"\n[update]\ncheck = true\n").unwrap();
+    modified_at(&path, 300);
+    poll(&mut router);
+    assert!(!router.engine.prediction_enabled());
+    assert!(router.engine.request_prediction(None, &[]).is_none());
+    assert!(!router.indicator_state().update_available);
+    assert!(!dir.join("update.json").exists());
+    std::fs::remove_dir_all(dir).unwrap();
+}

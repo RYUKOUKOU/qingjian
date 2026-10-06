@@ -21,32 +21,19 @@ use std::path::PathBuf;
 use objc2::MainThreadMarker;
 use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
 use objc2_foundation::{NSProcessInfo, NSRect, NSString};
-use qingjian_core::{
-    Candidate, CandidateKind, Cell, CloudWord, EmojiTable, Engine, FuzzyRules, Language, ModeKeys,
-    NoGlossFiller, NoInputLogger, NoPredictor, NoTranslator, Prediction,
-};
-use qingjian_dictionary::{Dictionary, WordList};
-use qingjian_learning::{FrequencyLearner, InputLog, UsageStats, VocabularyBook};
-use qingjian_lm::BigramModel;
+use qingjian_core::{Candidate, CandidateKind, Cell, Engine, Language, NoInputLogger};
+use qingjian_learning::InputLog;
 use qingjian_platform::extra_dictionaries;
 use qingjian_platform::{
-    AppsConfig, CandidateRenderer, DEFAULT_ENGLISH_CANDIDATES_OFF, DictionariesConfig,
-    GeneralConfig, KeyCombo, LEARNING_LANGUAGE_OFF, LayoutMode, LocalModelConfig, LogLevel,
-    Modifiers, PAGE_KEY_OPTIONS, PreeditMode, Scheme, ShortcutConfig, ThemeMode, UpdateChannel,
+    AppsConfig, DictionariesConfig, KeyCombo, LayoutMode, LocalModelConfig, Modifiers, PreeditMode,
 };
-use qingjian_predict::{
-    CloudGlossFiller, CloudPredictor, ConnectionTest, PredictConfig, PredictError,
-};
-use qingjian_translate::{Glossary, LayeredTranslator, LevelTable, PersonalGlossary};
 
-use crate::app::BundleInfo;
 use crate::app::{Settings, logging, paths};
 use crate::candidates::{CandidateWindow, Frame, Preedit, Row};
-use crate::error::HostError;
-use crate::menubar::{InputMenu, MenuAction, ModeIndicator};
-use crate::preferences::{PreferencesWindow, Setting, SettingValue, UpdateStatus};
+use crate::menubar::{InputMenu, ModeIndicator};
+use crate::preferences::PreferencesWindow;
 
-use cloud::{CloudTestMonitor, PredictMonitor};
+use cloud::PredictMonitor;
 use config::{ConfigWatch, TextReplacement};
 pub use dictionaries::DictionaryInfo;
 pub use init::init;
@@ -80,9 +67,6 @@ pub struct Host {
     /// 上次把学习数据落盘的时间；激活期间的定时器按 [`LEARNING_FLUSH_INTERVAL`] 再刷一次。
     pub last_flush: std::time::Instant,
 
-    /// 当前 Predictor 是按哪份 `[predict]` 建的；配置没变就不重建（重建会起新线程、丢缓存）。
-    applied_predict: PredictConfig,
-
     /// 附加词库是按哪份 `[dictionaries]` 装的；开关变了才重新加载。
     applied_dictionaries: DictionariesConfig,
 
@@ -98,7 +82,7 @@ pub struct Host {
     /// 版本号与构建标识，诊断信息里用。
     version: String,
 
-    /// 见 [`BundleInfo::build`]。
+    /// 见 [`crate::app::BundleInfo::build`]。
     build: String,
 
     /// 每页候选数（配置 `[general] page_size`，已夹到 1–9）。
@@ -152,12 +136,6 @@ pub struct Host {
     /// 联想结果轮询定时器。
     pub monitor: PredictMonitor,
 
-    /// 进行中的云服务连通性测试（「云服务」页「测试连接」按钮）；没在测为 `None`。
-    cloud_test: Option<ConnectionTest>,
-
-    /// 连通性测试的轮询定时器。
-    cloud_test_monitor: CloudTestMonitor,
-
     /// 本地整句模型的防抖与轮询定时器。
     rescore: RescoreMonitor,
 
@@ -170,12 +148,6 @@ pub struct Host {
 
     /// 上次套用的 `[model]`，变了才重载 / 卸载。
     applied_model: Option<LocalModelConfig>,
-
-    /// 检查更新；拿不到数据目录时没有。
-    updates: Option<qingjian_update::Checker>,
-
-    /// 菜单与「关于」页上正显示的更新状态，变了才刷界面。
-    update_status: UpdateStatus,
 
     /// 当前会话的候选、高亮、页码、preedit。
     pub session: Session,
@@ -196,9 +168,6 @@ const LEARNING_FLUSH_INTERVAL: std::time::Duration = std::time::Duration::from_s
 
 /// 输入统计文件名，与学习数据同目录（按天一行，见 `qingjian-learning::UsageStats`）。
 const USAGE_FILE: &str = "usage.tsv";
-
-/// 检查更新的结果文件名，与学习数据同目录（见 `qingjian-update::UpdateState`）。
-const UPDATE_STATE_FILE: &str = "update.json";
 
 /// 词汇记录文件名，与学习数据同目录（一个译词一行，见 `qingjian-learning::VocabularyBook`）。
 const VOCABULARY_FILE: &str = "user-vocab.tsv";

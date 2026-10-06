@@ -1,5 +1,5 @@
 //! 配置热加载：空闲时看 `config.toml` 的 mtime，改了就重读并应用（与 macOS 壳对齐）。
-//! 便宜的设置无条件重设；云联想 / 释义表按配置变化重建，附加词库也检查文件增删与更新。热加载状态在 [`ConfigReload`]。
+//! 便宜的设置无条件重设；本地释义表按配置变化重建，附加词库也检查文件增删与更新。热加载状态在 [`ConfigReload`]。
 
 mod state;
 
@@ -9,9 +9,8 @@ mod tests;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime};
 
-use qingjian_core::{Engine, Language, NoGlossFiller, NoPredictor, NoTranslator};
+use qingjian_core::{Engine, Language, NoTranslator};
 use qingjian_platform::{Config, code_tables};
-use qingjian_predict::{CloudGlossFiller, CloudPredictor, PredictConfig};
 
 pub(super) use self::state::ConfigReload;
 pub use self::state::DataDirs;
@@ -19,8 +18,6 @@ pub use self::state::DataDirs;
 /// 看配置文件 mtime 的最短间隔；工人循环空闲时按它等，重排的短节拍来得更勤时按这个节流。
 pub(super) const CONFIG_POLL_INTERVAL: Duration = Duration::from_secs(1);
 
-/// 检查更新的结果文件名，在用户数据目录下（见 `qingjian-update::UpdateState`）。
-const UPDATE_STATE_FILE: &str = "update.json";
 use super::{Router, RouterConfig};
 use crate::assembly;
 
@@ -28,33 +25,6 @@ fn mtime(path: &Path) -> Option<SystemTime> {
     std::fs::metadata(path)
         .and_then(|meta| meta.modified())
         .ok()
-}
-
-/// 按 `[predict]` 接云联想与释义兜底；关着或缺密钥就退回本地实现。启动与热加载共用。
-pub fn attach_cloud(engine: &mut Engine, predict: &PredictConfig) {
-    if !predict.enabled {
-        tracing::info!("云联想未开启（[predict] enabled = false）");
-        engine.set_predictor(Box::new(NoPredictor));
-        engine.set_gloss_filler(Box::new(NoGlossFiller));
-        return;
-    }
-    match CloudPredictor::new(predict) {
-        Ok(predictor) => {
-            engine.set_predictor(Box::new(predictor));
-            tracing::info!(model = %predict.model, "云联想已接入");
-        }
-        Err(error) => {
-            tracing::warn!(%error, "云联想接入失败（缺 API key？），退回本地候选");
-            engine.set_predictor(Box::new(NoPredictor));
-        }
-    }
-    match CloudGlossFiller::new(predict) {
-        Ok(filler) => engine.set_gloss_filler(Box::new(filler)),
-        Err(error) => {
-            tracing::warn!(%error, "释义兜底未启用");
-            engine.set_gloss_filler(Box::new(NoGlossFiller));
-        }
-    }
 }
 
 /// 学习语言变了就换释义表：关是不翻译；换语言重装随包 + 个人释义表，没有这门语言的表或装不上就保持原样。
@@ -91,16 +61,6 @@ fn swap_translator(
 }
 
 impl Router {
-    /// 检查更新查到了要提示的新版本（开关关着、本地开发包都不算）。
-    pub(super) fn update_available(&self) -> bool {
-        self.reload.as_ref().is_some_and(|reload| {
-            reload
-                .updates
-                .as_ref()
-                .is_some_and(|updates| updates.available(&reload.update).is_some())
-        })
-    }
-
     /// `config.toml` 路径；没开热加载（测试）时为 `None`。
     pub(super) fn config_path(&self) -> Option<&Path> {
         self.reload
@@ -108,9 +68,7 @@ impl Router {
             .map(|reload| reload.config_path.as_path())
     }
 
-    /// 开启热加载：记下路径与当前已应用的 predict / dictionaries / aux_code / 学习语言，
-    /// 以及启动用的那批数据目录。目录必须与启动同款语义（`dicts/` / `codes/`），
-    /// 热加载才找得到文件。
+    /// 开启热加载：记下词库、辅码与学习语言配置，以及启动时的数据目录。
     pub fn watch_config(
         &mut self,
         config: &Config,
@@ -121,9 +79,6 @@ impl Router {
         let last_mtime = mtime(&config_path);
         let code_files = dirs.code_snapshot();
         let dictionary_files = dirs.dict_snapshot();
-        let updates = dirs.user_root.as_deref().map(|dir| {
-            qingjian_update::Checker::new(dir.join(UPDATE_STATE_FILE), env!("CARGO_PKG_VERSION"))
-        });
         self.reload = Some(ConfigReload {
             config_path,
             last_check: Instant::now(),
@@ -131,13 +86,10 @@ impl Router {
             dirs,
             code_files,
             last_mtime,
-            applied_predict: config.predict.clone(),
             applied_dictionaries: config.dictionaries.clone(),
             applied_aux_code: config.aux_code.clone(),
             dictionary_files,
             applied_language: assembly::learning_language(config),
-            update: config.update.clone(),
-            updates,
         });
     }
 
@@ -151,9 +103,6 @@ impl Router {
             return;
         }
         reload.last_check = Instant::now();
-        if let Some(updates) = &reload.updates {
-            updates.poll(&reload.update);
-        }
         // 用户 `dicts/` 目录文件增删或更新：与配置改动无关，下一拍就生效
         let files = reload.dirs.dict_snapshot();
         if files != reload.dictionary_files {
@@ -222,11 +171,6 @@ impl Router {
         let Some(reload) = &mut self.reload else {
             return;
         };
-        reload.update = config.update.clone();
-        if config.predict != reload.applied_predict {
-            attach_cloud(&mut self.engine, &config.predict);
-            reload.applied_predict = config.predict.clone();
-        }
         let language = assembly::learning_language(config);
         if language != reload.applied_language
             && swap_translator(

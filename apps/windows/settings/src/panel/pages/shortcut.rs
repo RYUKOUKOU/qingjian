@@ -68,7 +68,7 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
         ),
         field(
             "问字模式键",
-            "这两个字母开头进模式：v1+2 出 3，usangemu 问「三个木」（需要云服务）。两个键不能相同。",
+            "这两个字母开头进模式：v1+2 出 3，u4e00 出对应的字符（本地码点问字）。两个键不能相同。",
             mode_combo(s.mode.question, context.callback(Message::ModeQuestion)),
         ),
         field(
@@ -97,14 +97,6 @@ pub(crate) fn view(settings: &Settings, context: &mut ViewContext<Settings>) -> 
             modifier_combo(
                 s.delete_candidate,
                 context.callback(Message::DeleteCandidate),
-            ),
-        ),
-        field(
-            "翻译选中文字",
-            "选中一段文字后按这组键 + 当前字母（缺省 Ctrl+Alt+T），把它译成学习语言，回车 / 空格替换、Esc 保留原文。需要云服务。这里只改修饰键，字母固定用当前的。",
-            modifier_combo(
-                s.translate_selection.modifiers,
-                context.callback(Message::TranslateSelection),
             ),
         ),
     ];

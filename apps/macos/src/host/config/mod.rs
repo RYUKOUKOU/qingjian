@@ -7,11 +7,15 @@ pub(super) use text_replacements::TextReplacement;
 pub(super) use watch::ConfigWatch;
 
 use super::init::load_glossary;
-use super::*;
+use qingjian_core::{Language, NoTranslator};
+use qingjian_platform::{GeneralConfig, Scheme};
+
+use super::{Host, LEARNING_FLUSH_INTERVAL};
+use crate::app::{logging, paths};
 
 impl Host {
     /// 把当前配置推给 Engine 与界面：模糊音 / 模式键 / 翻页 / 外观直接设；学习语言变了换释义表；
-    /// `[predict]` 变了（或 `force`）才重建 Predictor；最后刷新云朵标识、菜单勾选与设置窗口。
+    /// 词库变化（或 `force`）时重新加载，最后刷新菜单勾选与设置窗口。
     pub fn apply_config(&mut self, force: bool) {
         let config = self.settings.config().clone();
         self.engine.set_fuzzy(config.fuzzy);
@@ -32,7 +36,7 @@ impl Host {
         self.delete_keys = config.shortcut.delete_keys();
         self.translate_keys = config.shortcut.translate_selection;
         self.page_size = config.general.page_size();
-        self.cloud_slots = config.predict.slots;
+        self.cloud_slots = 0;
         self.page_keys = config.general.page_keys();
         self.preedit_mode = config.general.preedit;
         self.english_candidates = config.general.english_candidates;
@@ -53,32 +57,6 @@ impl Host {
             self.input_log_enabled = Some(config.general.input_log);
             self.open_input_log(config.general.input_log);
         }
-        if force || config.predict != self.applied_predict {
-            if config.predict.enabled {
-                // 没密钥等失败只记日志、退回不联想：输入优先于一切附加功能
-                match CloudPredictor::new(&config.predict) {
-                    Ok(predictor) => self.engine.set_predictor(Box::new(predictor)),
-                    Err(error) => {
-                        tracing::warn!(%error, "云联想未启用");
-                        self.engine.set_predictor(Box::new(NoPredictor));
-                    }
-                }
-                // 释义兜底随云联想一起开：释义表里没有的词上屏后问云端写进个人释义表
-                match CloudGlossFiller::new(&config.predict) {
-                    Ok(filler) => self.engine.set_gloss_filler(Box::new(filler)),
-                    Err(error) => {
-                        tracing::warn!(%error, "释义兜底未启用");
-                        self.engine.set_gloss_filler(Box::new(NoGlossFiller));
-                    }
-                }
-            } else {
-                self.engine.set_predictor(Box::new(NoPredictor));
-                self.engine.set_gloss_filler(Box::new(NoGlossFiller));
-            }
-            self.monitor.stop();
-            self.sentence = None;
-            self.applied_predict = config.predict.clone();
-        }
         if force || config.dictionaries != self.applied_dictionaries {
             self.reload_dictionaries();
         }
@@ -93,22 +71,10 @@ impl Host {
         let cloud_active = self.engine.prediction_enabled();
         self.indicator.set_cloud(cloud_active);
         self.indicator.update();
-        self.menu.sync(&config, cloud_active, self.settings.error());
-        let key_present = config
-            .predict
-            .api_key
-            .as_deref()
-            .is_some_and(|key| !key.trim().is_empty())
-            || std::env::var(&config.predict.api_key_env).is_ok_and(|key| !key.trim().is_empty());
+        self.menu.sync(&config, self.settings.error());
         self.dictionary_list = self.dictionary_infos();
-        self.preferences.sync(
-            &config,
-            key_present,
-            self.settings.error(),
-            &self.dictionary_list,
-            &self.update_status,
-        );
-        self.sync_update();
+        self.preferences
+            .sync(&config, self.settings.error(), &self.dictionary_list);
     }
 
     /// 配置里的自定义短语，`[general] system_text_replacements` 开着时再并上系统的文本替换，一起推给 Engine。
@@ -192,29 +158,6 @@ impl Host {
         if self.last_flush.elapsed() >= LEARNING_FLUSH_INTERVAL {
             self.engine.flush_learning();
             self.last_flush = std::time::Instant::now();
-        }
-        if let Some(updates) = &self.updates {
-            updates.poll(&self.settings.config().update);
-        }
-        self.sync_update();
-    }
-
-    /// 检查更新的状态变了就刷菜单里的「有新版本」与「关于」页；没变什么都不做。
-    pub fn sync_update(&mut self) {
-        let Some(updates) = &self.updates else {
-            return;
-        };
-        let config = self.settings.config();
-        let status = UpdateStatus {
-            available: updates.available(&config.update).map(|found| found.version),
-            checking: updates.checking(),
-            checked: updates.checked_at() > 0,
-            dev_build: updates.is_dev_build(),
-        };
-        if status != self.update_status {
-            self.menu.sync_update(status.available.as_deref());
-            self.preferences.sync_update(config, &status);
-            self.update_status = status;
         }
     }
 

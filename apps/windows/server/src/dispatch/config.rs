@@ -106,7 +106,7 @@ impl From<&Config> for RouterConfig {
     fn from(config: &Config) -> Self {
         Self {
             page_size: config.general.page_size(),
-            cloud_slots: config.predict.slots,
+            cloud_slots: 0,
             shift_letter_compose: config.general.shift_letter.compose(),
             layout: config.general.layout,
             theme: config.general.theme,

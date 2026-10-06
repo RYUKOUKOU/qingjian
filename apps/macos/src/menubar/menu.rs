@@ -13,17 +13,11 @@ pub struct InputMenu {
     /// 菜单。挂到状态项和 IMK `menu` 回调的是同一个对象。
     menu: Retained<NSMenu>,
 
-    /// 「云联想」勾选项。
-    cloud: Retained<NSMenuItem>,
-
     /// 模糊音子菜单的九条勾选项，顺序同 [`FuzzyRules::NAMES`]。
     fuzzy: Vec<Retained<NSMenuItem>>,
 
     /// 配置文件解析失败时显示的提示行，平时隐藏。
     error: Retained<NSMenuItem>,
-
-    /// 「有新版本 x.y.z…」，点了打开下载页；没有新版时隐藏。
-    update: Retained<NSMenuItem>,
 
     /// 所有条目的 target，要和菜单活得一样久。
     _target: Retained<MenuTarget>,
@@ -35,9 +29,6 @@ impl InputMenu {
         let menu = NSMenu::new(mtm);
         // 不让 AppKit 按响应链判断可用性：它找不到 target 就会把整份菜单灰掉
         menu.setAutoenablesItems(false);
-
-        let cloud = action_item(mtm, "云联想", Some(MenuAction::ToggleCloud), &target);
-        menu.addItem(&cloud);
 
         let fuzzy_menu = NSMenu::new(mtm);
         fuzzy_menu.setAutoenablesItems(false);
@@ -72,10 +63,6 @@ impl InputMenu {
             Some(MenuAction::OpenLogs),
             &target,
         ));
-        // 可点的条目只能放在这一组：放到下面两个纯展示条目之间，IMK 会在每次按键后停用再新建会话，打不了字
-        let update = action_item(mtm, "", Some(MenuAction::OpenDownload), &target);
-        update.setHidden(true);
-        menu.addItem(&update);
         menu.addItem(&NSMenuItem::separatorItem(mtm));
 
         let error = action_item(mtm, "", None, &target);
@@ -88,23 +75,9 @@ impl InputMenu {
 
         Self {
             menu,
-            cloud,
             fuzzy,
             error,
-            update,
             _target: target,
-        }
-    }
-
-    /// 查到新版本就露出「有新版本」那一行，没有就藏起来。
-    pub fn sync_update(&self, available: Option<&str>) {
-        match available {
-            Some(version) => {
-                self.update
-                    .setTitle(&NSString::from_str(&format!("有新版本 {version}…")));
-                self.update.setHidden(false);
-            }
-            None => self.update.setHidden(true),
         }
     }
 
@@ -115,13 +88,7 @@ impl InputMenu {
 
     /// 按当前配置刷新勾选状态。`cloud_active` 是 Engine 里真接上了 Predictor：
     /// 配置开了但没接上（多半是没密钥）时不打勾，标题说明原因，不能显示开了实际没开。
-    pub fn sync(&self, config: &Config, cloud_active: bool, error: Option<&str>) {
-        let title = match (config.predict.enabled, cloud_active) {
-            (true, false) => "云联想（启用失败，见日志）",
-            _ => "云联想",
-        };
-        self.cloud.setTitle(&NSString::from_str(title));
-        set_checked(&self.cloud, cloud_active);
+    pub fn sync(&self, config: &Config, error: Option<&str>) {
         for (item, name) in self.fuzzy.iter().zip(FuzzyRules::NAMES) {
             set_checked(item, config.fuzzy.is_on(name));
         }

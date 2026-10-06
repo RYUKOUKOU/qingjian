@@ -12,8 +12,8 @@ use qingjian_platform::Config;
 use super::controls::{language_label, small_label};
 use super::layout::{Layout, PAGE_PADDING, PAGE_WIDTH};
 use super::pages::{
-    AboutPage, AdvancedPage, CandidatesPage, CloudPage, DictionariesPage, FuzzyPage, GeneralPage,
-    PhrasesPage, ShortcutsPage, UpdateStatus, UsagePage, build_about,
+    AdvancedPage, CandidatesPage, DictionariesPage, FuzzyPage, GeneralPage, ModelPage, PhrasesPage,
+    ShortcutsPage, UsagePage, build_about,
 };
 use super::panel::PreferencesPanel;
 use super::target::PreferencesTarget;
@@ -53,17 +53,14 @@ pub struct PreferencesWindow {
     /// 「词库」页。
     dictionaries: DictionariesPage,
 
-    /// 「云服务」页。
-    cloud: CloudPage,
+    /// 「本地模型」页。
+    model: ModelPage,
 
     /// 「高级」页。
     advanced: AdvancedPage,
 
     /// 「统计」页的数字。
     usage: UsagePage,
-
-    /// 「关于」页的检查更新控件。
-    about: AboutPage,
 
     /// 底部状态行：配置文件解析失败时显示原因，也给临时提示用。
     status: Retained<NSTextField>,
@@ -114,8 +111,8 @@ impl PreferencesWindow {
         pages.push(page("词库", layout));
 
         let mut layout = new_layout();
-        let cloud = CloudPage::build(&mut layout, mtm, &target);
-        pages.push(page("云服务", layout));
+        let model = ModelPage::build(&mut layout, mtm, &target);
+        pages.push(page("本地模型", layout));
 
         let mut layout = new_layout();
         let advanced = AdvancedPage::build(&mut layout, mtm, &target);
@@ -126,7 +123,7 @@ impl PreferencesWindow {
         pages.push(page("统计", layout));
 
         let mut layout = new_layout();
-        let about = build_about(&mut layout, mtm, &target, version, build);
+        build_about(&mut layout, mtm, &target, version, build);
         pages.push(page("关于", layout));
 
         // 标签视图：先用临时尺寸量出边框与标签栏占多少，再按最高的一页定最终尺寸
@@ -192,10 +189,9 @@ impl PreferencesWindow {
             phrases,
             fuzzy,
             dictionaries,
-            cloud,
+            model,
             advanced,
             usage,
-            about,
             status,
             _target: target,
         }
@@ -228,25 +224,16 @@ impl PreferencesWindow {
         self.panel.present();
     }
 
-    /// 按配置刷新所有控件。`key_present` 是密钥已经有了（环境或配置里）；密钥框永远不回显值。
-    pub fn sync(
-        &self,
-        config: &Config,
-        key_present: bool,
-        error: Option<&str>,
-        dictionaries: &[DictionaryInfo],
-        update: &UpdateStatus,
-    ) {
+    /// 按配置刷新所有本地控件。
+    pub fn sync(&self, config: &Config, error: Option<&str>, dictionaries: &[DictionaryInfo]) {
         self.dictionaries.rebuild(dictionaries);
-        self.about.sync(config, update);
         self.general.sync(config);
         self.candidates.sync(config);
         self.shortcuts.sync(config);
         self.phrases.sync(config);
         self.fuzzy.sync(config);
-        self.cloud.sync(
+        self.model.sync(
             config,
-            key_present,
             crate::app::paths::p2c_model_path().is_some()
                 || crate::app::paths::model_path().is_some(),
         );
@@ -256,11 +243,6 @@ impl PreferencesWindow {
             .unwrap_or_default();
         self.status.setTextColor(Some(&NSColor::systemRedColor()));
         self.status.setStringValue(&NSString::from_str(&status));
-    }
-
-    /// 检查更新的状态变了（查完了、查到新版），只刷「关于」页。
-    pub fn sync_update(&self, config: &Config, update: &UpdateStatus) {
-        self.about.sync(config, update);
     }
 
     /// 刷新「统计」页。打开窗口时调（数字随时在变，不跟配置一起同步）。

@@ -36,9 +36,6 @@ pub struct ShortcutsPage {
 
     /// 删除候选的修饰键。
     delete_candidate: Retained<KeyRecorder>,
-
-    /// 翻译选中文字的组合键。
-    translate_selection: Retained<KeyRecorder>,
 }
 
 impl ShortcutsPage {
@@ -80,7 +77,7 @@ impl ShortcutsPage {
         note(
             layout,
             mtm,
-            "这两个字母开头进模式：v1+2 出 3，usangemu 问「三个木」（需要云服务），u4e00 出对应的字符。两个键不能相同。",
+            "这两个字母开头进模式：v1+2 出 3，u4e00 出对应的字符（本地码点问字）。两个键不能相同。",
         );
         let question_mark = checkbox(
             mtm,
@@ -131,20 +128,6 @@ impl ShortcutsPage {
             "按住修饰键再按候选序号：自己造的词、云端选过的词整个删掉；词库里的词清掉对它的学习记录，回到原来的排序。组句中要打感叹号先把词上屏。",
         );
         layout.space(GROUP_GAP);
-        let translate_selection = row_recorder(
-            layout,
-            mtm,
-            "翻译选中的文字",
-            Setting::TranslateSelectionKeys,
-            false,
-            target,
-        );
-        note(
-            layout,
-            mtm,
-            "在应用里选中一段文字再按这个键，译文（学习语言）出现在候选窗口：回车替换选中的文字，Esc 保留原文。需要开着云服务。",
-        );
-        layout.space(GROUP_GAP);
         note_full(
             layout,
             mtm,
@@ -159,7 +142,7 @@ impl ShortcutsPage {
             mtm,
             "组句中固定的键（不可改）：空格上屏首选，1–9 选词，回车原样上屏，Esc 清空；⌥⌫ 删一个音节，⌘⌫ 删到开头；\
              ⌥← / ⌥→ 按音节跳光标，⌘← / ⌘→ 到开头 / 末尾；上 / 下移动高亮，PageUp / PageDown 与 ⇧Tab 翻页；\
-             Tab 接受云端整句补全（没有就翻页）；半角标点进入英文直输段。",
+             Tab 翻页；半角标点进入英文直输段。",
         );
         Self {
             page_keys,
@@ -169,7 +152,6 @@ impl ShortcutsPage {
             translation,
             translation_second,
             delete_candidate,
-            translate_selection,
         }
     }
 
@@ -199,8 +181,5 @@ impl ShortcutsPage {
         self.translation_second.show(&second.key(), &second.label());
         let delete = config.shortcut.delete_keys();
         self.delete_candidate.show(&delete.key(), &delete.label());
-        let translate = config.shortcut.translate_selection;
-        self.translate_selection
-            .show(&translate.key_string(), &translate.label());
     }
 }

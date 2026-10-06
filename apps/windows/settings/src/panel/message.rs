@@ -37,17 +37,8 @@ pub(crate) enum Message {
     Font(String),
     StatusBar(bool),
 
-    // 云服务页
+    // 本地模型页
     LocalModel(bool),
-    CloudEnabled(bool),
-    CloudApiKey(String),
-    CloudModel(String),
-    CloudBaseUrl(String),
-    CloudSlots(Option<f64>),
-    CloudSentence(bool),
-    TestConnection,
-    CloudTestDone(Result<String, String>),
-
     // 快捷键页
     PageKeys(Option<usize>),
     ModeExpression(Option<usize>),
@@ -56,8 +47,6 @@ pub(crate) enum Message {
     Translation(Option<usize>),
     TranslationSecond(Option<usize>),
     DeleteCandidate(Option<usize>),
-    /// 只换修饰键，字母键固定用当前的。
-    TranslateSelection(Option<usize>),
 
     // 模糊音页
     /// 配置键 + 新值。
@@ -101,15 +90,4 @@ pub(crate) enum Message {
     /// 日志目录 + config.toml 打成 zip 放桌面。
     ExportLogs,
     ClearInputLog,
-
-    // 关于页
-    OpenWebsite,
-
-    // 关于页：检查更新（`UpdateChecked` 的 `None` = 本地开发版没查）
-    UpdateCheck(bool),
-    UpdateChannel(Option<usize>),
-    CheckUpdateNow,
-    UpdateChecked(Option<Result<qingjian_update::UpdateState, String>>),
-    OpenDownload,
-    OpenRepository,
 }

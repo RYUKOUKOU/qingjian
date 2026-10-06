@@ -2,7 +2,7 @@
 //!
 //! 普通控件改完立即写回 `config.toml`（`Config::set_value`，保留注释），
 //! 再经 [`crate::host::Host::apply_config`] 生效；窗口自己不存任何状态，勾选与文本永远从配置同步过来。
-//! 自定义短语通过保存按钮校验后写入；密钥例外：写到配置同目录的 `.env`，不进 `config.toml`。
+//! 自定义短语通过保存按钮校验后写入。
 //!
 //! 输入法进程是 `LSBackgroundOnly`，平时不能成为前台应用；打开窗口前把激活策略临时切成 Accessory，
 //! 关窗时切回去，否则文本框拿不到键盘焦点。文本框里的 ⌘C / ⌘V 靠主菜单「编辑」项的快捷键分发，
@@ -25,7 +25,6 @@ use objc2_app_kit::{NSButton, NSControlStateValueOn, NSPopUpButton, NSTextField}
 
 pub use file_dialog::choose_dictionary_file;
 pub use key_recorder::KeyRecorder;
-pub use pages::{REPOSITORY_URL, UpdateStatus, WEBSITE_URL};
 pub use setting::{Setting, SettingValue};
 pub use window::PreferencesWindow;
 

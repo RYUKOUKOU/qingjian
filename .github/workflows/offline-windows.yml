@@ -1,0 +1,82 @@
+# offline 分支的 Windows 安装包；不发 Release，不访问官网更新发布流程。
+name: offline-windows-installer
+
+on:
+  push:
+    branches: [offline]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-windows-installer
+  cancel-in-progress: true
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      QINGJIAN_UIACCESS: '0'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
+        with:
+          toolchain: 1.96.0
+          targets: i686-pc-windows-msvc
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+      - name: Offline checks
+        run: python tools/check-offline.py --target x86_64-pc-windows-msvc --target i686-pc-windows-msvc
+      - name: Fetch product data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tools/release/data-fetch.sh
+          ls -la data/generated data/generated/dicts data/models/hanzhang-zhiwei data/models/hanzhang-tongbian
+
+      # 与开发机同版本（7.1.0，自带简体中文翻译；Chocolatey 只有 6.x，6 的安装包不带简中）。钉死 GitHub Release 上的文件。
+      - name: Install Inno Setup 7.1.0
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_0/innosetup-7.1.0-x64.exe'
+          # 下载来的安装程序要以管理员身份执行，先核对 SHA-256（2026-09-11 从上面地址下载后算出），对不上就不装。
+          $expected = '0362a383ed217d4c4239b5933866dd96d3eb2102737da92f80f6057a4b40df2f'
+          $exe = Join-Path $env:RUNNER_TEMP 'innosetup.exe'
+          Invoke-WebRequest -Uri $url -OutFile $exe
+          $actual = (Get-FileHash -Path $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Inno Setup 安装程序 SHA-256 不符：$actual" }
+          Start-Process -FilePath $exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-' -Wait
+          & "${env:ProgramFiles}\Inno Setup 7\ISCC.exe" --version
+
+      - name: Build installer
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File apps\windows\installer\build.ps1
+
+
+      - name: Installer regression
+        shell: pwsh
+        run: ./apps/windows/installer/test-install.ps1
+
+      - name: Write checksum
+        shell: pwsh
+        run: |
+          Get-ChildItem target/installer/*setup.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          } | Set-Content target/installer/SHA256SUMS.txt -Encoding ascii
+
+      - name: Upload installer
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: qingjian-offline-windows-${{ github.sha }}
+          path: |
+            target/installer/*setup.exe
+            target/installer/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
