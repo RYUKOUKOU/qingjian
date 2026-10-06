@@ -52,7 +52,7 @@ def closure(start, graph):
 
 def check_lock():
     """锁文件跨平台、含 build/dev 的保守上界，防止间接依赖漏检。"""
-    packages = tomllib.loads((ROOT / "Cargo.lock").read_text())["package"]
+    packages = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))["package"]
     graph = {}
     for package in packages:
         graph.setdefault(package["name"], set()).update(
@@ -75,10 +75,10 @@ def check_sources():
                 continue
             if path.suffix not in {".rs", ".cpp", ".h"}:
                 continue
-            for line_number, line in enumerate(path.read_text().splitlines(), 1):
+            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
                 if NETWORK.search(line):
                     failures.append(f"{path.relative_to(ROOT)}:{line_number}: {line.strip()}")
-    installer = (ROOT / "apps/windows/installer/qingjian.iss").read_text()
+    installer = (ROOT / "apps/windows/installer/qingjian.iss").read_text(encoding="utf-8")
     if re.search(r"https?://|App(?:Support|Updates|Publisher)URL", installer):
         failures.append("Windows installer has a web link")
     if failures:
@@ -91,7 +91,7 @@ def check_metadata(target):
     metadata = json.loads(subprocess.check_output([
         "cargo", "metadata", "--format-version", "1", "--locked",
         "--filter-platform", target,
-    ], cwd=ROOT, text=True))
+    ], cwd=ROOT, text=True, encoding="utf-8"))
     packages = {package["id"]: package["name"] for package in metadata["packages"]}
     graph = {
         node["id"]: {
